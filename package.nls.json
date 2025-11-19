@@ -5,5 +5,6 @@
 	"command.todo.editTodo.title": "Edit TODO",
 	"command.todo.completeTodo.title": "Complete TODO",
 	"command.todo.removeTodo.title": "Remove TODO",
-	"command.todo.clearTodos.title": "Clear TODO list"
+	"command.todo.clearTodos.title": "Clear TODO list",
+	"view.todoView.label": "TODO Lists"
 }

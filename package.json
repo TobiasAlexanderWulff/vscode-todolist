@@ -14,6 +14,80 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "todoView",
+          "name": "%view.todoView.label%"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "todo.addTodo",
+          "when": "view == todoView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "todo.clearTodos",
+          "when": "view == todoView",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "todo.addTodo",
+          "when": "view == todoView && viewItem == todo:globalRoot",
+          "group": "inline"
+        },
+        {
+          "command": "todo.addTodo",
+          "when": "view == todoView && viewItem == todo:workspaceFolder",
+          "group": "inline"
+        },
+        {
+          "command": "todo.editTodo",
+          "when": "view == todoView && viewItem == todo:globalItem",
+          "group": "inline@1"
+        },
+        {
+          "command": "todo.editTodo",
+          "when": "view == todoView && viewItem == todo:workspaceItem",
+          "group": "inline@1"
+        },
+        {
+          "command": "todo.completeTodo",
+          "when": "view == todoView && viewItem == todo:globalItem",
+          "group": "inline@2"
+        },
+        {
+          "command": "todo.completeTodo",
+          "when": "view == todoView && viewItem == todo:workspaceItem",
+          "group": "inline@2"
+        },
+        {
+          "command": "todo.removeTodo",
+          "when": "view == todoView && viewItem == todo:globalItem",
+          "group": "inline@3"
+        },
+        {
+          "command": "todo.removeTodo",
+          "when": "view == todoView && viewItem == todo:workspaceItem",
+          "group": "inline@3"
+        },
+        {
+          "command": "todo.clearTodos",
+          "when": "view == todoView && viewItem == todo:globalRoot",
+          "group": "inline@4"
+        },
+        {
+          "command": "todo.clearTodos",
+          "when": "view == todoView && viewItem == todo:workspaceFolder",
+          "group": "inline@4"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "todo.addTodo",
