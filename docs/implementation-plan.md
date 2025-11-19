@@ -5,7 +5,7 @@ High-level roadmap for building the VS Code TODO extension. Each phase reference
 ## Phase 1 – Foundation
 1. **Clean scaffold**
    - Remove the default `helloWorld` command and placeholder text.
-   - Configure localization plumbing (`vscode-nls`) and set up EN/DE message bundles.
+   - Configure localization plumbing (`@vscode/l10n`) and set up EN/DE message bundles.
 2. **State & models**
    - Define the `Todo` model (id, title, completed, scope, position, timestamps if needed).
    - Implement `TodoRepository` abstraction that persists via `globalState` (profile) and `workspaceState` (per folder), including undo buffer support.

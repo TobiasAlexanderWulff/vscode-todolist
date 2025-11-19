@@ -1,0 +1,8 @@
+{
+	"extension.activatedLog": "Die Erweiterung vscode-todo wurde aktiviert.",
+	"command.todo.add.placeholder": "\"{0}\" wird bald verfügbar sein. Sieh dir den Status in docs/implementation-plan.md an.",
+	"command.todo.edit.placeholder": "\"{0}\" wird bald verfügbar sein. Sieh dir den Status in docs/implementation-plan.md an.",
+	"command.todo.complete.placeholder": "\"{0}\" wird bald verfügbar sein. Sieh dir den Status in docs/implementation-plan.md an.",
+	"command.todo.remove.placeholder": "\"{0}\" wird bald verfügbar sein. Sieh dir den Status in docs/implementation-plan.md an.",
+	"command.todo.clear.placeholder": "\"{0}\" wird bald verfügbar sein. Sieh dir den Status in docs/implementation-plan.md an."
+}

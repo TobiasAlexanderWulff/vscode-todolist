@@ -1,26 +1,39 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+import * as l10n from '@vscode/l10n';
 import * as vscode from 'vscode';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+import { TodoRepository } from './todoRepository';
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "vscode-todo" is now active!');
+const PLACEHOLDER_COMMANDS: Array<{ id: string; messageKey: string }> = [
+	{ id: 'todo.addTodo', messageKey: 'command.todo.add.placeholder' },
+	{ id: 'todo.editTodo', messageKey: 'command.todo.edit.placeholder' },
+	{ id: 'todo.completeTodo', messageKey: 'command.todo.complete.placeholder' },
+	{ id: 'todo.removeTodo', messageKey: 'command.todo.remove.placeholder' },
+	{ id: 'todo.clearTodos', messageKey: 'command.todo.clear.placeholder' },
+];
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('vscode-todo.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from vscode-todo!');
-	});
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
+	await l10n.config({ fsPath: context.asAbsolutePath('l10n/bundle.l10n.json') });
 
-	context.subscriptions.push(disposable);
+	const repository = new TodoRepository(context);
+	registerPlaceholderCommands(context, repository);
+
+	console.log(l10n.t('extension.activatedLog', 'vscode-todo extension activated.'));
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate(): void {
+	// Nothing to clean up yet.
+}
+
+function registerPlaceholderCommands(context: vscode.ExtensionContext, _repository: TodoRepository): void {
+	PLACEHOLDER_COMMANDS.forEach(({ id, messageKey }) => {
+		const disposable = vscode.commands.registerCommand(id, () => {
+			const message = l10n.t(
+				messageKey,
+				'"{0}" will ship soon. Track the implementation status in docs/implementation-plan.md.',
+				id
+			);
+			vscode.window.showInformationMessage(message);
+		});
+		context.subscriptions.push(disposable);
+	});
+}

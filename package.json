@@ -9,15 +9,75 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "vscode-todo.helloWorld",
-        "title": "Hello World"
+        "command": "todo.addTodo",
+        "title": "%command.todo.addTodo.title%"
+      },
+      {
+        "command": "todo.editTodo",
+        "title": "%command.todo.editTodo.title%"
+      },
+      {
+        "command": "todo.completeTodo",
+        "title": "%command.todo.completeTodo.title%"
+      },
+      {
+        "command": "todo.removeTodo",
+        "title": "%command.todo.removeTodo.title%"
+      },
+      {
+        "command": "todo.clearTodos",
+        "title": "%command.todo.clearTodos.title%"
       }
-    ]
+    ],
+    "keybindings": [
+      {
+        "command": "todo.addTodo",
+        "key": "ctrl+alt+t",
+        "mac": "cmd+alt+t",
+        "when": "!inputFocus"
+      },
+      {
+        "command": "todo.editTodo",
+        "key": "ctrl+alt+e",
+        "mac": "cmd+alt+e",
+        "when": "!inputFocus"
+      },
+      {
+        "command": "todo.completeTodo",
+        "key": "ctrl+alt+enter",
+        "mac": "cmd+alt+enter",
+        "when": "!inputFocus"
+      },
+      {
+        "command": "todo.removeTodo",
+        "key": "ctrl+alt+backspace",
+        "mac": "cmd+alt+backspace",
+        "when": "!inputFocus"
+      },
+      {
+        "command": "todo.clearTodos",
+        "key": "ctrl+alt+shift+backspace",
+        "mac": "cmd+alt+shift+backspace",
+        "when": "!inputFocus"
+      }
+    ],
+    "configuration": {
+      "title": "%configuration.todo.title%",
+      "properties": {
+        "todo.confirmDestructiveActions": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "%configuration.todo.confirmDestructiveActions.description%"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
@@ -34,16 +94,19 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.106.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
+    "@types/vscode": "^1.106.1",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",
-    "eslint": "^9.34.0",
-    "esbuild": "^0.25.9",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.9.2",
     "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.25.9",
+    "eslint": "^9.34.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@vscode/l10n": "^0.0.16"
   }
 }

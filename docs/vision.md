@@ -32,7 +32,7 @@ Both scopes should be visible side-by-side in the Explorer view (e.g., via a `Tr
 2. Implement a `TodoRepository` abstraction that wraps `globalState`/`workspaceState`.
 3. Build a `TreeDataProvider` with two collapsible root nodes (“Global” and “Projects”), rendering each workspace folder as a child under “Projects.”
 4. Wire extension commands to mutate the repository, confirm destructive actions (e.g., clearing todos), and refresh the tree.
-5. Add localization (EN/DE) via `vscode-nls`, persistence tests, and validation around data migration/versioning.
+5. Add localization (EN/DE) via `@vscode/l10n`, persistence tests, and validation around data migration/versioning.
 
 - `Ctrl+Alt+T` / `Cmd+Alt+T`: `todo.addTodo`.
 - `Ctrl+Alt+E` / `Cmd+Alt+E`: `todo.editTodo`.

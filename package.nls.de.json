@@ -1,0 +1,9 @@
+{
+	"configuration.todo.title": "VS Code TODO",
+	"configuration.todo.confirmDestructiveActions.description": "Bestätige das Löschen mehrerer Todos und biete eine Rückgängig-Option über eine Benachrichtigung an.",
+	"command.todo.addTodo.title": "Todo hinzufügen",
+	"command.todo.editTodo.title": "Todo bearbeiten",
+	"command.todo.completeTodo.title": "Todo abschließen",
+	"command.todo.removeTodo.title": "Todo entfernen",
+	"command.todo.clearTodos.title": "Todos löschen"
+}

@@ -1,0 +1,9 @@
+{
+	"configuration.todo.title": "VS Code TODO",
+	"configuration.todo.confirmDestructiveActions.description": "Confirm before clearing multiple todos and provide an undo option via a toast notification.",
+	"command.todo.addTodo.title": "Add TODO",
+	"command.todo.editTodo.title": "Edit TODO",
+	"command.todo.completeTodo.title": "Complete TODO",
+	"command.todo.removeTodo.title": "Remove TODO",
+	"command.todo.clearTodos.title": "Clear TODO list"
+}

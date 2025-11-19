@@ -1,0 +1,8 @@
+{
+	"extension.activatedLog": "vscode-todo extension activated.",
+	"command.todo.add.placeholder": "\"{0}\" will ship soon. Track the implementation status in docs/implementation-plan.md.",
+	"command.todo.edit.placeholder": "\"{0}\" will ship soon. Track the implementation status in docs/implementation-plan.md.",
+	"command.todo.complete.placeholder": "\"{0}\" will ship soon. Track the implementation status in docs/implementation-plan.md.",
+	"command.todo.remove.placeholder": "\"{0}\" will ship soon. Track the implementation status in docs/implementation-plan.md.",
+	"command.todo.clear.placeholder": "\"{0}\" will ship soon. Track the implementation status in docs/implementation-plan.md."
+}
