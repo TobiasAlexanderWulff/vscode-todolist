@@ -4,7 +4,12 @@ import * as vscode from 'vscode';
 import { TodoRepository } from './todoRepository';
 import { TreeNode, TodoTreeDataProvider, getWorkspaceFolderKey } from './todoTreeDataProvider';
 import { Todo } from './types';
-import { TodoWebviewHost } from './todoWebviewHost';
+import {
+	OutboundMessage,
+	TodoWebviewHost,
+	WebviewScope,
+	ProviderMode,
+} from './todoWebviewHost';
 
 type ScopeTarget = { scope: 'global' } | { scope: 'workspace'; workspaceFolder: string };
 type TodoTarget =
@@ -18,6 +23,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 	const globalProvider = new TodoTreeDataProvider(repository, 'global', 'todoGlobalView');
 	const projectsProvider = new TodoTreeDataProvider(repository, 'projects', 'todoProjectsView');
 	const webviewHost = new TodoWebviewHost(context);
+	const webviewMessageDisposable = webviewHost.onDidReceiveMessage((event) => {
+		console.log('[webview]', event);
+	});
 
 	const globalView = vscode.window.createTreeView<TreeNode>('todoGlobalView', {
 		treeDataProvider: globalProvider,
@@ -37,7 +45,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 		lastSelectedNode = event.selection[0];
 	});
 
-	context.subscriptions.push(globalProvider, projectsProvider, globalView, projectsView, webviewHost);
+	context.subscriptions.push(
+		globalProvider,
+		projectsProvider,
+		globalView,
+		projectsView,
+		webviewHost,
+		webviewMessageDisposable
+	);
 
 	registerCommands({
 		context,
@@ -47,6 +62,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 			projectsProvider.refresh();
 		},
 		getSelectedNode: () => lastSelectedNode,
+		webviewHost,
 	});
 
 	console.log(l10n.t('extension.activatedLog', 'vscode-todo extension activated.'));
@@ -61,6 +77,7 @@ interface CommandContext {
 	repository: TodoRepository;
 	refreshTreeViews: () => void;
 	getSelectedNode: () => TreeNode | undefined;
+	webviewHost: TodoWebviewHost;
 }
 
 function registerCommands({
@@ -68,22 +85,23 @@ function registerCommands({
 	repository,
 	refreshTreeViews,
 	getSelectedNode,
+	webviewHost,
 }: CommandContext): void {
 	context.subscriptions.push(
 		vscode.commands.registerCommand('todo.addTodo', (node?: TreeNode) =>
-			addTodo({ repository, refreshTreeViews, getSelectedNode }, node)
+			addTodo({ repository, refreshTreeViews, getSelectedNode, webviewHost }, node)
 		),
 		vscode.commands.registerCommand('todo.editTodo', (node?: TreeNode) =>
-			editTodo({ repository, refreshTreeViews, getSelectedNode }, node)
+			editTodo({ repository, refreshTreeViews, getSelectedNode, webviewHost }, node)
 		),
 		vscode.commands.registerCommand('todo.completeTodo', (node?: TreeNode) =>
-			toggleTodoCompletion({ repository, refreshTreeViews, getSelectedNode }, node)
+			toggleTodoCompletion({ repository, refreshTreeViews, getSelectedNode, webviewHost }, node)
 		),
 		vscode.commands.registerCommand('todo.removeTodo', (node?: TreeNode) =>
-			removeTodo({ repository, refreshTreeViews, getSelectedNode }, node)
+			removeTodo({ repository, refreshTreeViews, getSelectedNode, webviewHost }, node)
 		),
 		vscode.commands.registerCommand('todo.clearTodos', (node?: TreeNode) =>
-			clearTodos({ repository, refreshTreeViews, getSelectedNode }, node)
+			clearTodos({ repository, refreshTreeViews, getSelectedNode, webviewHost }, node)
 		)
 	);
 }
@@ -92,6 +110,7 @@ interface HandlerContext {
 	repository: TodoRepository;
 	refreshTreeViews: () => void;
 	getSelectedNode: () => TreeNode | undefined;
+	webviewHost: TodoWebviewHost;
 }
 
 async function addTodo(
@@ -102,6 +121,7 @@ async function addTodo(
 	if (!scope) {
 		return;
 	}
+	dispatchInlineCreate(context.webviewHost, scope);
 	const title = await vscode.window.showInputBox({
 		prompt: l10n.t('command.add.prompt', 'What needs to be done?'),
 		placeHolder: l10n.t('command.add.placeholder', 'Type a TODO'),
@@ -131,6 +151,7 @@ async function editTodo(
 	if (!target) {
 		return;
 	}
+	dispatchInlineEdit(context.webviewHost, target);
 	const todos = readTodos(context.repository, target);
 	const existing = todos.find((todo) => todo.id === target.todoId);
 	if (!existing) {
@@ -408,4 +429,46 @@ function findWorkspaceFolder(key?: string): vscode.WorkspaceFolder | undefined {
 	return (vscode.workspace.workspaceFolders ?? []).find(
 		(folder) => folder.uri.toString() === key
 	);
+}
+
+function dispatchInlineCreate(host: TodoWebviewHost, scope: ScopeTarget): void {
+	const message = {
+		type: 'startInlineCreate',
+		scope: scopeTargetToWebviewScope(scope),
+	} as OutboundMessage;
+	host.postMessage(scopeToProviderMode(scope), message);
+}
+
+function dispatchInlineEdit(host: TodoWebviewHost, target: TodoTarget): void {
+	const scope = todoTargetToWebviewScope(target);
+	if (!scope) {
+		return;
+	}
+	const message = {
+		type: 'startInlineEdit',
+		scope,
+		todoId: target.todoId,
+	} as OutboundMessage;
+	host.postMessage(target.scope === 'global' ? 'global' : 'projects', message);
+}
+
+function scopeTargetToWebviewScope(scope: ScopeTarget): WebviewScope {
+	if (scope.scope === 'global') {
+		return { scope: 'global' };
+	}
+	return { scope: 'workspace', workspaceFolder: scope.workspaceFolder };
+}
+
+function todoTargetToWebviewScope(target: TodoTarget): WebviewScope | undefined {
+	if (target.scope === 'global') {
+		return { scope: 'global' };
+	}
+	if (!target.workspaceFolder) {
+		return undefined;
+	}
+	return { scope: 'workspace', workspaceFolder: target.workspaceFolder };
+}
+
+function scopeToProviderMode(scope: ScopeTarget): ProviderMode {
+	return scope.scope === 'global' ? 'global' : 'projects';
 }
