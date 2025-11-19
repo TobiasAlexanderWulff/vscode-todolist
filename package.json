@@ -27,11 +27,13 @@
       "todoContainer": [
         {
           "id": "todoGlobalView",
-          "name": "%view.todoGlobal.label%"
+          "name": "%view.todoGlobal.label%",
+          "type": "webview"
         },
         {
           "id": "todoProjectsView",
           "name": "%view.todoProjects.label%",
+          "type": "webview",
           "when": "workspaceFolderCount > 0"
         }
       ]
@@ -63,43 +65,7 @@
           "icon": "$(trash)"
         }
       ],
-      "view/item/context": [
-        {
-          "command": "todo.addTodo",
-          "when": "view == todoProjectsView && viewItem == todo:workspaceFolder",
-          "group": "inline@0"
-        },
-        {
-          "command": "todo.editTodo",
-          "when": "view == todoGlobalView && viewItem == todo:globalItem",
-          "group": "inline@1"
-        },
-        {
-          "command": "todo.editTodo",
-          "when": "view == todoProjectsView && viewItem == todo:workspaceItem",
-          "group": "inline@1"
-        },
-        {
-          "command": "todo.completeTodo",
-          "when": "view == todoGlobalView && viewItem == todo:globalItem",
-          "group": "inline@2"
-        },
-        {
-          "command": "todo.completeTodo",
-          "when": "view == todoProjectsView && viewItem == todo:workspaceItem",
-          "group": "inline@2"
-        },
-        {
-          "command": "todo.removeTodo",
-          "when": "view == todoGlobalView && viewItem == todo:globalItem",
-          "group": "inline@3"
-        },
-        {
-          "command": "todo.removeTodo",
-          "when": "view == todoProjectsView && viewItem == todo:workspaceItem",
-          "group": "inline@3"
-        }
-      ]
+      "view/item/context": []
     },
     "commands": [
       {

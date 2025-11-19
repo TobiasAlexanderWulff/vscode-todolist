@@ -2,7 +2,6 @@ import * as l10n from '@vscode/l10n';
 import * as vscode from 'vscode';
 
 import { TodoRepository } from './todoRepository';
-import { TreeNode, TodoTreeDataProvider, getWorkspaceFolderKey } from './todoTreeDataProvider';
 import { Todo } from './types';
 import {
 	OutboundMessage,
@@ -22,49 +21,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 	await l10n.config({ fsPath: context.asAbsolutePath('l10n/bundle.l10n.json') });
 
 	const repository = new TodoRepository(context);
-	const globalProvider = new TodoTreeDataProvider(repository, 'global', 'todoGlobalView');
-	const projectsProvider = new TodoTreeDataProvider(repository, 'projects', 'todoProjectsView');
-	const refreshTreeViews = (): void => {
-		globalProvider.refresh();
-		projectsProvider.refresh();
-	};
 	const webviewHost = new TodoWebviewHost(context);
 	const webviewMessageDisposable = webviewHost.onDidReceiveMessage((event) =>
-		handleWebviewMessage(event, repository, webviewHost, refreshTreeViews)
+		handleWebviewMessage(event, repository, webviewHost)
 	);
 
-	const globalView = vscode.window.createTreeView<TreeNode>('todoGlobalView', {
-		treeDataProvider: globalProvider,
-		dragAndDropController: globalProvider.dragAndDropController,
-	});
-	const projectsView = vscode.window.createTreeView<TreeNode>('todoProjectsView', {
-		treeDataProvider: projectsProvider,
-		dragAndDropController: projectsProvider.dragAndDropController,
-		showCollapseAll: true,
-	});
-
-	let lastSelectedNode: TreeNode | undefined;
-	globalView.onDidChangeSelection((event) => {
-		lastSelectedNode = event.selection[0];
-	});
-	projectsView.onDidChangeSelection((event) => {
-		lastSelectedNode = event.selection[0];
-	});
-
-	context.subscriptions.push(
-		globalProvider,
-		projectsProvider,
-		globalView,
-		projectsView,
-		webviewHost,
-		webviewMessageDisposable
-	);
+	context.subscriptions.push(webviewHost, webviewMessageDisposable);
 
 	registerCommands({
 		context,
 		repository,
-		refreshTreeViews,
-		getSelectedNode: () => lastSelectedNode,
 		webviewHost,
 	});
 	broadcastWebviewState(webviewHost, repository);
@@ -79,49 +45,28 @@ export function deactivate(): void {
 interface CommandContext {
 	context: vscode.ExtensionContext;
 	repository: TodoRepository;
-	refreshTreeViews: () => void;
-	getSelectedNode: () => TreeNode | undefined;
 	webviewHost: TodoWebviewHost;
 }
 
-function registerCommands({
-	context,
-	repository,
-	refreshTreeViews,
-	getSelectedNode,
-	webviewHost,
-}: CommandContext): void {
+function registerCommands({ context, repository, webviewHost }: CommandContext): void {
 	context.subscriptions.push(
-		vscode.commands.registerCommand('todo.addTodo', (node?: TreeNode) =>
-			addTodo({ repository, refreshTreeViews, getSelectedNode, webviewHost }, node)
+		vscode.commands.registerCommand('todo.addTodo', () => addTodo({ repository, webviewHost })),
+		vscode.commands.registerCommand('todo.editTodo', () => editTodo({ repository, webviewHost })),
+		vscode.commands.registerCommand('todo.completeTodo', () =>
+			toggleTodoCompletion({ repository, webviewHost })
 		),
-		vscode.commands.registerCommand('todo.editTodo', (node?: TreeNode) =>
-			editTodo({ repository, refreshTreeViews, getSelectedNode, webviewHost }, node)
-		),
-		vscode.commands.registerCommand('todo.completeTodo', (node?: TreeNode) =>
-			toggleTodoCompletion({ repository, refreshTreeViews, getSelectedNode, webviewHost }, node)
-		),
-		vscode.commands.registerCommand('todo.removeTodo', (node?: TreeNode) =>
-			removeTodo({ repository, refreshTreeViews, getSelectedNode, webviewHost }, node)
-		),
-		vscode.commands.registerCommand('todo.clearTodos', (node?: TreeNode) =>
-			clearTodos({ repository, refreshTreeViews, getSelectedNode, webviewHost }, node)
-		)
+		vscode.commands.registerCommand('todo.removeTodo', () => removeTodo({ repository, webviewHost })),
+		vscode.commands.registerCommand('todo.clearTodos', () => clearTodos({ repository, webviewHost }))
 	);
 }
 
 interface HandlerContext {
 	repository: TodoRepository;
-	refreshTreeViews: () => void;
-	getSelectedNode: () => TreeNode | undefined;
 	webviewHost: TodoWebviewHost;
 }
 
-async function addTodo(
-	context: HandlerContext,
-	node?: TreeNode
-): Promise<void> {
-	const scope = await resolveScopeTarget(context, node);
+async function addTodo(context: HandlerContext): Promise<void> {
+	const scope = await resolveScopeTarget();
 	if (!scope) {
 		return;
 	}
@@ -144,15 +89,11 @@ async function addTodo(
 	const todos = readTodos(context.repository, scope);
 	todos.push(todo);
 	await persistTodos(context.repository, scope, todos);
-	context.refreshTreeViews();
 	broadcastWebviewState(context.webviewHost, context.repository);
 }
 
-async function editTodo(
-	context: HandlerContext,
-	node?: TreeNode
-): Promise<void> {
-	const target = await resolveTodoTarget(context, node);
+async function editTodo(context: HandlerContext): Promise<void> {
+	const target = await resolveTodoTarget(context);
 	if (!target) {
 		return;
 	}
@@ -174,15 +115,11 @@ async function editTodo(
 	existing.title = title.trim();
 	existing.updatedAt = new Date().toISOString();
 	await persistTodos(context.repository, target, todos);
-	context.refreshTreeViews();
 	broadcastWebviewState(context.webviewHost, context.repository);
 }
 
-async function toggleTodoCompletion(
-	context: HandlerContext,
-	node?: TreeNode
-): Promise<void> {
-	const target = await resolveTodoTarget(context, node);
+async function toggleTodoCompletion(context: HandlerContext): Promise<void> {
+	const target = await resolveTodoTarget(context);
 	if (!target) {
 		return;
 	}
@@ -198,15 +135,11 @@ async function toggleTodoCompletion(
 		? l10n.t('command.complete.completed', 'Marked TODO as completed')
 		: l10n.t('command.complete.reopened', 'Marked TODO as active');
 	vscode.window.setStatusBarMessage(stateMessage, 2000);
-	context.refreshTreeViews();
 	broadcastWebviewState(context.webviewHost, context.repository);
 }
 
-async function removeTodo(
-	context: HandlerContext,
-	node?: TreeNode
-): Promise<void> {
-	const target = await resolveTodoTarget(context, node);
+async function removeTodo(context: HandlerContext): Promise<void> {
+	const target = await resolveTodoTarget(context);
 	if (!target) {
 		return;
 	}
@@ -216,15 +149,11 @@ async function removeTodo(
 		return;
 	}
 	await persistTodos(context.repository, target, next);
-	context.refreshTreeViews();
 	broadcastWebviewState(context.webviewHost, context.repository);
 }
 
-async function clearTodos(
-	context: HandlerContext,
-	node?: TreeNode
-): Promise<void> {
-	const scope = await resolveScopeTarget(context, node);
+async function clearTodos(context: HandlerContext): Promise<void> {
+	const scope = await resolveScopeTarget();
 	if (!scope) {
 		return;
 	}
@@ -264,7 +193,6 @@ async function clearScope(context: HandlerContext, scope: ScopeTarget): Promise<
 	);
 	context.repository.captureSnapshot(scopeKey, todos);
 	await persistTodos(context.repository, scope, []);
-	context.refreshTreeViews();
 	broadcastWebviewState(context.webviewHost, context.repository);
 	const undoAction = l10n.t('command.undo', 'Undo');
 	const clearedMessage = l10n.t(
@@ -280,7 +208,6 @@ async function clearScope(context: HandlerContext, scope: ScopeTarget): Promise<
 		const snapshot = context.repository.consumeSnapshot(scopeKey);
 		if (snapshot) {
 			await persistTodos(context.repository, scope, snapshot);
-			context.refreshTreeViews();
 			vscode.window.showInformationMessage(
 				l10n.t('command.undo.success', 'Restored TODOs for {0}', describeScope(scope))
 			);
@@ -292,33 +219,8 @@ async function clearScope(context: HandlerContext, scope: ScopeTarget): Promise<
 	}
 }
 
-async function resolveScopeTarget(
-	context: HandlerContext,
-	node?: TreeNode
-): Promise<ScopeTarget | undefined> {
-	const fromNode = scopeFromNode(node ?? context.getSelectedNode());
-	if (fromNode) {
-		return fromNode;
-	}
+async function resolveScopeTarget(): Promise<ScopeTarget | undefined> {
 	return promptForScope();
-}
-
-function scopeFromNode(node?: TreeNode): ScopeTarget | undefined {
-	if (!node) {
-		return undefined;
-	}
-	if (node.kind === 'workspace') {
-		return { scope: 'workspace', workspaceFolder: getWorkspaceFolderKey(node.folder) };
-	}
-	if (node.kind === 'todo') {
-		if (node.todo.scope === 'global') {
-			return { scope: 'global' };
-		}
-		if (node.todo.workspaceFolder) {
-			return { scope: 'workspace', workspaceFolder: node.todo.workspaceFolder };
-		}
-	}
-	return undefined;
 }
 
 async function promptForScope(): Promise<ScopeTarget | undefined> {
@@ -342,23 +244,7 @@ async function promptForScope(): Promise<ScopeTarget | undefined> {
 	return selection?.scope;
 }
 
-async function resolveTodoTarget(
-	context: HandlerContext,
-	node?: TreeNode
-): Promise<TodoTarget | undefined> {
-	const fromNode = node ?? context.getSelectedNode();
-	if (fromNode && fromNode.kind === 'todo') {
-		if (fromNode.todo.scope === 'global') {
-			return { todoId: fromNode.todo.id, scope: 'global' };
-		}
-		if (fromNode.todo.workspaceFolder) {
-			return {
-				todoId: fromNode.todo.id,
-				scope: 'workspace',
-				workspaceFolder: fromNode.todo.workspaceFolder,
-			};
-		}
-	}
+async function resolveTodoTarget(context: HandlerContext): Promise<TodoTarget | undefined> {
 	const picks = buildTodoQuickPickItems(context.repository);
 	if (picks.length === 0) {
 		vscode.window.showInformationMessage(
@@ -443,6 +329,10 @@ function findWorkspaceFolder(key?: string): vscode.WorkspaceFolder | undefined {
 	return (vscode.workspace.workspaceFolders ?? []).find(
 		(folder) => folder.uri.toString() === key
 	);
+}
+
+function getWorkspaceFolderKey(folder: vscode.WorkspaceFolder): string {
+	return folder.uri.toString();
 }
 
 function dispatchInlineCreate(host: TodoWebviewHost, scope: ScopeTarget): void {
@@ -532,8 +422,7 @@ function reorderTodosByOrder(todos: Todo[], order: string[]): boolean {
 async function handleWebviewMessage(
 	event: WebviewMessageEvent,
 	repository: TodoRepository,
-	webviewHost: TodoWebviewHost,
-	refreshTreeViews: () => void
+	webviewHost: TodoWebviewHost
 ): Promise<void> {
 	const { message } = event;
 	if (message.type === 'webviewReady') {
@@ -545,20 +434,13 @@ async function handleWebviewMessage(
 		if (!scope) {
 			return;
 		}
-		const context: HandlerContext = {
-			repository,
-			refreshTreeViews,
-			getSelectedNode: () => undefined,
-			webviewHost,
-		};
-		await clearScope(context, scope);
+		await clearScope({ repository, webviewHost }, scope);
 		return;
 	}
 	const mutationPerformed = await handleWebviewMutation(message, repository);
 	if (!mutationPerformed) {
 		return;
 	}
-	refreshTreeViews();
 	broadcastWebviewState(webviewHost, repository);
 }
 
