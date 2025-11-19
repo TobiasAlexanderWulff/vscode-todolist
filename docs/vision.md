@@ -10,19 +10,20 @@ Create a lightweight TODO manager baked into the VS Code UI with two complementa
 1. **Global (profile-bound)** — personal todos that follow the user across every workspace within the active VS Code profile.
 2. **Project (workspace-bound)** — todos that live with the current project and are shared with the team whenever the workspace is opened.
 
-Both scopes should be visible side-by-side in the Explorer view (e.g., via a `TreeView`) so users can see the full picture of their tasks at a glance.
+Both scopes should be visible side-by-side in the dedicated Activity Bar view (rendered with `WebviewView`s) so users can see the full picture of their tasks at a glance.
 
 ## Core Capabilities
 - Add, edit, complete, remove, and bulk-clear todos within either scope via commands (`todo.addTodo`, `todo.editTodo`, `todo.completeTodo`, `todo.removeTodo`, `todo.clearTodos`).
+- Provide inline creation/editing within the Activity Bar views: clicking the view-title add button or invoking the command inserts a placeholder row directly into the list, focused for immediate typing (no modal input boxes). Pressing Enter commits the change; Escape cancels.
 - Provide drag-and-drop reordering inside each scope; default ordering falls back to the creation ID when no manual ordering is set. Persist ordering by storing a `position` field per todo that updates whenever an item is dragged.
 - Persist todos automatically using the storage that VS Code exposes through `ExtensionContext` (`globalState` for profile data, `workspaceState` for project data). Each todo carries a hidden ID and completion state.
-- Offer a custom TreeView inside the Explorer, displaying two collapsible parents (“Global” and “Projects”). For multi-root workspaces, show a collapsible todo section per workspace folder under “Projects” and merge the global section once.
-- Keep the TreeView in sync with storage so changes are reflected immediately when switching workspaces or profiles mid-session.
-- Confirm destructive actions (e.g., clearing all todos) with a layered approach: only prompt when more than one item will be affected, surface a warning dialog, respect the `todo.confirmDestructiveActions` setting (default `true`), and follow up with a post-action toast containing an “Undo” action that restores the previous state for a short window. Pair the confirmation with subtle TreeView animations (fade/removal cues) so feedback is visible even without dialogs.
+- Offer custom Webview-based Explorer views pinned in the Activity Bar, displaying two collapsible parents (“Global” and “Projects”). For multi-root workspaces, show a collapsible todo section per workspace folder under “Projects” and merge the global section once.
+- Keep the WebviewViews in sync with storage so changes are reflected immediately when switching workspaces or profiles mid-session.
+- Confirm destructive actions (e.g., clearing all todos) with a layered approach: only prompt when more than one item will be affected, surface a warning dialog, respect the `todo.confirmDestructiveActions` setting (default `true`), and follow up with a post-action toast containing an “Undo” action that restores the previous state for a short window. Pair the confirmation with subtle inline animations (fade/removal cues) so feedback is visible even without dialogs.
 
 ## Experience Principles
 - **Zero setup** — the extension should work out of the box once installed; no external services or manual configuration.
-- **Stay in flow** — todo capture must be frictionless (simple input boxes, keyboard friendly commands).
+- **Stay in flow** — todo capture must be frictionless (inline inputs in the view, keyboard friendly commands, no blocking dialogs).
 - **Keep context visible** — it should be obvious whether an item lives in the global list or the project list.
 - **Profile aware** — switching VS Code profiles should automatically switch the global todo set with no additional work.
 - **Respect language preferences** — provide English and German localizations, with graceful fallback behavior.
@@ -30,8 +31,8 @@ Both scopes should be visible side-by-side in the Explorer view (e.g., via a `Tr
 ## Rough Implementation Direction
 1. Scaffold the project with `yo code` (TypeScript template).
 2. Implement a `TodoRepository` abstraction that wraps `globalState`/`workspaceState`.
-3. Build a `TreeDataProvider` with two collapsible root nodes (“Global” and “Projects”), rendering each workspace folder as a child under “Projects.”
-4. Wire extension commands to mutate the repository, confirm destructive actions (e.g., clearing todos), and refresh the tree.
+3. Build Webview-based Explorer views with two collapsible root nodes (“Global” and “Projects”), rendering each workspace folder as a child under “Projects,” and handling inline creation/editing/drag-drop interactions via message passing.
+4. Wire extension commands to mutate the repository, confirm destructive actions (e.g., clearing todos), and refresh the views.
 5. Add localization (EN/DE) via `@vscode/l10n`, persistence tests, and validation around data migration/versioning.
 
 - `Ctrl+Alt+T` / `Cmd+Alt+T`: `todo.addTodo`.
@@ -50,9 +51,9 @@ Each shortcut uses `Ctrl/Cmd + Alt` as a base chord, which is relatively underus
 ## Testing Strategy
 - Unit-test the repository layer with mocked `ExtensionContext` objects to ensure global/workspace state round-trips IDs, positions, and schema migrations correctly.
 - Exercise drag-and-drop ordering logic by simulating reorder operations and confirming `position` fields reflow as expected (including fallback-to-ID behavior).
-- Use the VS Code extension test harness to invoke commands (`todo.addTodo`, `todo.editTodo`, etc.) and assert TreeDataProvider output/state.
+- Use the VS Code extension test harness to invoke commands (`todo.addTodo`, `todo.editTodo`, etc.) and assert the webview state/messages that would be rendered to users.
 - Verify confirmation and undo flows by stubbing user responses, ensuring multi-item clears prompt, respect the `todo.confirmDestructiveActions` setting, and restore state when undo is pressed.
-- Smoke-test localization (EN/DE) by loading each locale and verifying key strings render, especially TreeView labels and command titles.
+- Smoke-test localization (EN/DE) by loading each locale and verifying key strings render, especially view labels and command titles.
 - Cover multi-root workspaces by opening multiple folders in integration tests to confirm project scopes remain isolated while global todos persist across folders.
 
 ## Known Non-Goals (for now)
