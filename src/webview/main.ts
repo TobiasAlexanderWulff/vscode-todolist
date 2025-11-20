@@ -287,10 +287,7 @@ function renderProjectsSection(projects: WebviewProjectsState): HTMLElement {
 		clearButton.addEventListener('click', () => postMessage({ type: 'clearScope', scope }));
 		workspaceActions.appendChild(clearButton);
 
-		const titleRow = document.createElement('div');
-		titleRow.style.display = 'flex';
-		titleRow.style.justifyContent = 'space-between';
-		titleRow.style.alignItems = 'center';
+		const titleRow = document.createElement('header');
 		titleRow.appendChild(workspaceTitle);
 		titleRow.appendChild(workspaceActions);
 

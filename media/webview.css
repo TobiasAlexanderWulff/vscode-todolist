@@ -69,6 +69,15 @@ main {
   line-height: normal;
 }
 
+.workspace-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0;
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+
 .button-link svg {
   width: 14px;
   height: 14px;
@@ -173,5 +182,5 @@ main {
 .workspace-title {
   font-size: 0.9rem;
   font-weight: 600;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0;
 }
