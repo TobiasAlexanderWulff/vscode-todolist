@@ -9,7 +9,7 @@
     "url": "https://github.com/tobiasalexanderwulff/vscode-todo.git"
   },
   "engines": {
-    "vscode": "^1.106.1"
+    "vscode": "^1.104.0"
   },
   "categories": [
     "Other"
@@ -156,7 +156,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "@types/vscode": "^1.106.1",
+    "@types/vscode": "^1.104.0",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",
     "@vscode/test-cli": "^0.0.11",
