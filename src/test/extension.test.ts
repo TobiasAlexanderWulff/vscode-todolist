@@ -5,41 +5,11 @@ import * as vscode from 'vscode';
 import { addTodo, editTodo, handleWebviewMessage } from '../extension';
 import { TodoRepository } from '../todoRepository';
 import { Todo } from '../types';
-
-const workspaceFoldersDescriptor = Object.getOwnPropertyDescriptor(
-	vscode.workspace,
-	'workspaceFolders'
-);
-
-/** Minimal in-memory stand-in for VS Code's Memento used by the repository during tests. */
-class InMemoryMemento implements vscode.Memento {
-	private readonly store = new Map<string, unknown>();
-	private syncedKeys: readonly string[] = [];
-
-	get<T>(key: string, defaultValue?: T): T | undefined {
-		if (this.store.has(key)) {
-			return this.store.get(key) as T;
-		}
-		return defaultValue;
-	}
-
-	update<T>(key: string, value: T): Thenable<void> {
-		if (value === undefined) {
-			this.store.delete(key);
-		} else {
-			this.store.set(key, value);
-		}
-		return Promise.resolve();
-	}
-
-	keys(): readonly string[] {
-		return Array.from(this.store.keys());
-	}
-
-	setKeysForSync(keys: readonly string[]): void {
-		this.syncedKeys = keys;
-	}
-}
+import {
+	InMemoryMemento,
+	overrideWorkspaceFolders,
+	restoreWorkspaceFoldersDescriptor,
+} from './testUtils';
 
 interface RepositoryHarness {
 	repository: TodoRepository;
@@ -386,7 +356,7 @@ test('addTodo dispatches inline create after focusing container', async () => {
 		);
 	});
 
-	test('clears and restores global todos via undo from webview', async () => {
+test('clears and restores global todos via undo from webview', async () => {
 		const { repository } = createRepositoryHarness();
 		const todoA = repository.createTodo({ title: 'Global A', scope: 'global' });
 		const todoB = repository.createTodo({ title: 'Global B', scope: 'global' });
@@ -432,18 +402,3 @@ test('addTodo dispatches inline create after focusing container', async () => {
 		);
 	});
 });
-
-function overrideWorkspaceFolders(folders: readonly vscode.WorkspaceFolder[]): void {
-	Object.defineProperty(vscode.workspace, 'workspaceFolders', {
-		get: () => folders,
-		configurable: true,
-	});
-}
-
-function restoreWorkspaceFoldersDescriptor(): void {
-	if (workspaceFoldersDescriptor) {
-		Object.defineProperty(vscode.workspace, 'workspaceFolders', workspaceFoldersDescriptor);
-		return;
-	}
-	Object.defineProperty(vscode.workspace, 'workspaceFolders', { get: () => undefined });
-}
