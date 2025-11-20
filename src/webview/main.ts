@@ -225,30 +225,6 @@ function renderScopeSection(state: WebviewScopeState, scope: WebviewScope): HTML
 	const section = document.createElement('section');
 	section.className = 'todo-section';
 
-	const header = document.createElement('header');
-	const title = document.createElement('h2');
-	title.textContent = `(${state.todos.length})`;
-	header.appendChild(title);
-
-	const actions = document.createElement('div');
-	actions.className = 'section-actions';
-	const addButton = document.createElement('button');
-	addButton.className = 'button-link';
-	addButton.textContent = '+ Add';
-	addButton.addEventListener('click', () => {
-		startInlineCreate(scope);
-	});
-	actions.appendChild(addButton);
-
-	const clearButton = document.createElement('button');
-	clearButton.className = 'button-link';
-	clearButton.textContent = 'Clear';
-	clearButton.addEventListener('click', () => postMessage({ type: 'clearScope', scope }));
-	actions.appendChild(clearButton);
-	header.appendChild(actions);
-
-	section.appendChild(header);
-
 	const list = document.createElement('div');
 	list.className = 'todo-list';
 	const inlineState = getInlineState(scope);
@@ -276,12 +252,6 @@ function renderScopeSection(state: WebviewScopeState, scope: WebviewScope): HTML
 function renderProjectsSection(projects: WebviewProjectsState): HTMLElement {
 	const container = document.createElement('section');
 	container.className = 'todo-section';
-
-	const header = document.createElement('header');
-	const title = document.createElement('h2');
-	title.textContent = `(${projects.folders.length})`;
-	header.appendChild(title);
-	container.appendChild(header);
 
 	if (projects.folders.length === 0) {
 		const empty = document.createElement('p');
