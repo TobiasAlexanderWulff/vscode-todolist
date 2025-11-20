@@ -395,7 +395,7 @@ function reorderTodosByOrder(todos: Todo[], order: string[]): boolean {
 	return changed;
 }
 
-async function handleWebviewMessage(
+export async function handleWebviewMessage(
 	event: WebviewMessageEvent,
 	repository: TodoRepository,
 	webviewHost: TodoWebviewHost
