@@ -1,6 +1,8 @@
 import * as assert from 'assert';
+import { afterEach } from 'mocha';
 import * as vscode from 'vscode';
 
+import { addTodo, editTodo } from '../extension';
 import { TodoRepository } from '../todoRepository';
 import { Todo } from '../types';
 
@@ -97,5 +99,91 @@ suite('TodoRepository', () => {
 		assert.strictEqual(restored.length, 1);
 		assert.strictEqual(restored[0].title, 'Snapshot me');
 		assert.strictEqual(repository.consumeSnapshot(scopeKey), undefined);
+	});
+});
+
+suite('Command handlers', () => {
+	const originalShowQuickPick = vscode.window.showQuickPick;
+	const originalExecuteCommand = vscode.commands.executeCommand;
+
+	class FakeWebviewHost {
+		readonly postMessages: Array<{ mode: string; message: unknown }> = [];
+		readonly broadcastMessages: unknown[] = [];
+
+		postMessage(mode: string, message: unknown): void {
+			this.postMessages.push({ mode, message });
+		}
+
+		broadcast(message: unknown): void {
+			this.broadcastMessages.push(message);
+		}
+	}
+
+	afterEach(() => {
+		(vscode.window as unknown as { showQuickPick: typeof vscode.window.showQuickPick }).showQuickPick =
+			originalShowQuickPick;
+		(vscode.commands as unknown as { executeCommand: typeof vscode.commands.executeCommand }).executeCommand =
+			originalExecuteCommand;
+	});
+
+test('addTodo dispatches inline create after focusing container', async () => {
+		const { repository } = createRepositoryHarness();
+		const host = new FakeWebviewHost();
+		const executedCommands: string[] = [];
+		const executeCommandStub: typeof vscode.commands.executeCommand = async (command: string) => {
+			executedCommands.push(command);
+			return undefined as unknown as never;
+		};
+		(vscode.commands as unknown as { executeCommand: typeof vscode.commands.executeCommand }).executeCommand =
+			executeCommandStub;
+		const showQuickPickStub: typeof vscode.window.showQuickPick = async (items: any) =>
+			(items as readonly vscode.QuickPickItem[])[0] as any;
+		(vscode.window as unknown as { showQuickPick: typeof vscode.window.showQuickPick }).showQuickPick =
+			showQuickPickStub;
+
+		await addTodo({ repository, webviewHost: host } as any);
+
+		assert.deepStrictEqual(executedCommands, ['workbench.view.extension.todoContainer']);
+		assert.ok(
+			host.broadcastMessages.some(
+				(message) => (message as { type: string }).type === 'stateUpdate'
+			)
+		);
+		assert.deepStrictEqual(host.postMessages[0], {
+			mode: 'global',
+			message: { type: 'startInlineCreate', scope: { scope: 'global' } },
+		});
+	});
+
+	test('editTodo dispatches inline edit for selected todo', async () => {
+		const { repository } = createRepositoryHarness();
+		const todo = repository.createTodo({ title: 'Edit me', scope: 'global' });
+		await repository.saveGlobalTodos([todo]);
+
+		const host = new FakeWebviewHost();
+		const executedCommands: string[] = [];
+		const executeCommandStub: typeof vscode.commands.executeCommand = async (command: string) => {
+			executedCommands.push(command);
+			return undefined as unknown as never;
+		};
+		(vscode.commands as unknown as { executeCommand: typeof vscode.commands.executeCommand }).executeCommand =
+			executeCommandStub;
+		const showQuickPickStub: typeof vscode.window.showQuickPick = async (items: any) =>
+			(items as readonly vscode.QuickPickItem[])[0] as any;
+		(vscode.window as unknown as { showQuickPick: typeof vscode.window.showQuickPick }).showQuickPick =
+			showQuickPickStub;
+
+		await editTodo({ repository, webviewHost: host } as any);
+
+		assert.deepStrictEqual(executedCommands, ['workbench.view.extension.todoContainer']);
+		assert.ok(
+			host.broadcastMessages.some(
+				(message) => (message as { type: string }).type === 'stateUpdate'
+			)
+		);
+		assert.deepStrictEqual(host.postMessages[0], {
+			mode: 'global',
+			message: { type: 'startInlineEdit', scope: { scope: 'global' }, todoId: todo.id },
+		});
 	});
 });

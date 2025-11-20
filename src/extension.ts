@@ -65,7 +65,7 @@ interface HandlerContext {
 	webviewHost: TodoWebviewHost;
 }
 
-async function addTodo(context: HandlerContext): Promise<void> {
+export async function addTodo(context: HandlerContext): Promise<void> {
 	const scope = await resolveScopeTarget();
 	if (!scope) {
 		return;
@@ -75,7 +75,7 @@ async function addTodo(context: HandlerContext): Promise<void> {
 	dispatchInlineCreate(context.webviewHost, scope);
 }
 
-async function editTodo(context: HandlerContext): Promise<void> {
+export async function editTodo(context: HandlerContext): Promise<void> {
 	const target = await resolveTodoTarget(context);
 	if (!target) {
 		return;
