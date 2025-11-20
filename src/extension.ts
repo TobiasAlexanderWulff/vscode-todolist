@@ -17,6 +17,9 @@ type TodoTarget =
 	| { todoId: string; scope: 'global' }
 	| { todoId: string; scope: 'workspace'; workspaceFolder: string };
 
+/**
+ * Activation entry point: initializes localization, repositories, webviews, and commands.
+ */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
 	await l10n.config({ fsPath: context.asAbsolutePath('l10n/bundle.l10n.json') });
 
@@ -65,6 +68,9 @@ interface HandlerContext {
 	webviewHost: TodoWebviewHost;
 }
 
+/**
+ * Focuses the TODO container and triggers inline creation in the webview for a chosen scope.
+ */
 export async function addTodo(context: HandlerContext): Promise<void> {
 	const scope = await resolveScopeTarget();
 	if (!scope) {
@@ -75,6 +81,9 @@ export async function addTodo(context: HandlerContext): Promise<void> {
 	dispatchInlineCreate(context.webviewHost, scope);
 }
 
+/**
+ * Focuses the TODO container and triggers inline edit for a selected todo in the webview.
+ */
 export async function editTodo(context: HandlerContext): Promise<void> {
 	const target = await resolveTodoTarget(context);
 	if (!target) {
@@ -395,6 +404,9 @@ function reorderTodosByOrder(todos: Todo[], order: string[]): boolean {
 	return changed;
 }
 
+/**
+ * Routes inbound webview messages, performing mutations and broadcasting updated state.
+ */
 export async function handleWebviewMessage(
 	event: WebviewMessageEvent,
 	repository: TodoRepository,
