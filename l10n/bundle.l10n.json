@@ -24,5 +24,11 @@
 	"scope.global.detail": "Profile-wide list",
 	"scope.global.label": "Global",
 	"scope.pick.title": "Where should the TODO live?",
-	"scope.workspace.unknown": "Project"
+	"scope.workspace.unknown": "Project",
+	"view.todoProjects.label": "Project TODOs",
+	"webview.global.empty": "No global TODOs yet",
+	"webview.projects.empty": "No project TODOs yet",
+	"webview.inlineCreate.hint": "Type and press Enter to save, Esc to cancel.",
+	"command.todo.completeTodo.title": "Complete TODO",
+	"command.todo.removeTodo.title": "Remove TODO"
 }
