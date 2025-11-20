@@ -78,6 +78,7 @@ export class TodoWebviewHost implements vscode.Disposable {
 class TodoWebviewProvider implements vscode.WebviewViewProvider, vscode.Disposable {
 	private webviewView: vscode.WebviewView | undefined;
 	private ready = false;
+	private pendingMessages: OutboundMessage[] = [];
 
 	constructor(
 		private readonly extensionUri: vscode.Uri,
@@ -104,6 +105,7 @@ class TodoWebviewProvider implements vscode.WebviewViewProvider, vscode.Disposab
 
 	postMessage(message: OutboundMessage): void {
 		if (!this.webviewView || !this.ready) {
+			this.pendingMessages.push(message);
 			return;
 		}
 		this.webviewView.webview.postMessage(message);
@@ -111,11 +113,13 @@ class TodoWebviewProvider implements vscode.WebviewViewProvider, vscode.Disposab
 
 	markReady(): void {
 		this.ready = true;
+		this.flushPendingMessages();
 	}
 
 	dispose(): void {
 		this.webviewView = undefined;
 		this.ready = false;
+		this.pendingMessages = [];
 	}
 
 	private buildHtml(webview: vscode.Webview): string {
@@ -146,8 +150,17 @@ class TodoWebviewProvider implements vscode.WebviewViewProvider, vscode.Disposab
 			<p class="empty-state">Loading TODOs…</p>
 		</main>
 		<script nonce="${nonce}" src="${scriptUri}"></script>
-	</body>
+		</body>
 </html>`;
+	}
+
+	private flushPendingMessages(): void {
+		if (!this.webviewView || !this.ready || this.pendingMessages.length === 0) {
+			return;
+		}
+		const messages = [...this.pendingMessages];
+		this.pendingMessages = [];
+		messages.forEach((message) => this.webviewView?.webview.postMessage(message));
 	}
 }
 

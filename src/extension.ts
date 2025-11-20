@@ -70,26 +70,9 @@ async function addTodo(context: HandlerContext): Promise<void> {
 	if (!scope) {
 		return;
 	}
-	dispatchInlineCreate(context.webviewHost, scope);
-	const title = await vscode.window.showInputBox({
-		prompt: l10n.t('command.add.prompt', 'What needs to be done?'),
-		placeHolder: l10n.t('command.add.placeholder', 'Type a TODO'),
-		ignoreFocusOut: true,
-		validateInput: (value) =>
-			value.trim().length === 0 ? l10n.t('command.validate.title', 'Enter a title') : undefined,
-	});
-	if (!title) {
-		return;
-	}
-	const todo = context.repository.createTodo({
-		title: title.trim(),
-		scope: scope.scope,
-		workspaceFolder: scope.scope === 'workspace' ? scope.workspaceFolder : undefined,
-	});
-	const todos = readTodos(context.repository, scope);
-	todos.push(todo);
-	await persistTodos(context.repository, scope, todos);
+	await focusTodoContainer();
 	broadcastWebviewState(context.webviewHost, context.repository);
+	dispatchInlineCreate(context.webviewHost, scope);
 }
 
 async function editTodo(context: HandlerContext): Promise<void> {
@@ -97,25 +80,14 @@ async function editTodo(context: HandlerContext): Promise<void> {
 	if (!target) {
 		return;
 	}
-	dispatchInlineEdit(context.webviewHost, target);
 	const todos = readTodos(context.repository, target);
 	const existing = todos.find((todo) => todo.id === target.todoId);
 	if (!existing) {
 		return;
 	}
-	const title = await vscode.window.showInputBox({
-		prompt: l10n.t('command.edit.prompt', 'Update TODO'),
-		value: existing.title,
-		validateInput: (value) =>
-			value.trim().length === 0 ? l10n.t('command.validate.title', 'Enter a title') : undefined,
-	});
-	if (!title) {
-		return;
-	}
-	existing.title = title.trim();
-	existing.updatedAt = new Date().toISOString();
-	await persistTodos(context.repository, target, todos);
+	await focusTodoContainer();
 	broadcastWebviewState(context.webviewHost, context.repository);
+	dispatchInlineEdit(context.webviewHost, target);
 }
 
 async function toggleTodoCompletion(context: HandlerContext): Promise<void> {
@@ -375,6 +347,10 @@ function todoTargetToWebviewScope(target: TodoTarget): WebviewScope | undefined 
 
 function scopeToProviderMode(scope: ScopeTarget): ProviderMode {
 	return scope.scope === 'global' ? 'global' : 'projects';
+}
+
+async function focusTodoContainer(): Promise<void> {
+	await vscode.commands.executeCommand('workbench.view.extension.todoContainer');
 }
 
 function broadcastWebviewState(host: TodoWebviewHost, repository: TodoRepository): void {
