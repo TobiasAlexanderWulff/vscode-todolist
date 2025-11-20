@@ -132,16 +132,21 @@
     }
     applyPendingFocus();
   }
-  function formatCount(format, count) {
-    return format.replace("{0}", count.toString());
+  function formatCount(count, singular, plural) {
+    const template = count === 1 ? singular : plural;
+    return template.replace("{0}", count.toString());
   }
   function renderScopeSection(state, scope) {
-    var _a2;
+    var _a2, _b;
     const section = document.createElement("section");
     section.className = "todo-section";
     const header = document.createElement("header");
     const title = document.createElement("h2");
-    title.textContent = formatCount((_a2 = snapshot == null ? void 0 : snapshot.strings.todoCountFormat) != null ? _a2 : "{0} TODOs", state.todos.length);
+    title.textContent = formatCount(
+      state.todos.length,
+      (_a2 = snapshot == null ? void 0 : snapshot.strings.todoCountSingular) != null ? _a2 : "{0} TODO",
+      (_b = snapshot == null ? void 0 : snapshot.strings.todoCountPlural) != null ? _b : "{0} TODOs"
+    );
     header.appendChild(title);
     const actions = document.createElement("div");
     actions.className = "section-actions";
@@ -179,14 +184,15 @@
     return section;
   }
   function renderProjectsSection(projects) {
-    var _a2;
+    var _a2, _b;
     const container = document.createElement("section");
     container.className = "todo-section";
     const header = document.createElement("header");
     const title = document.createElement("h2");
     title.textContent = formatCount(
-      (_a2 = snapshot == null ? void 0 : snapshot.strings.projectCountFormat) != null ? _a2 : "{0} folders",
-      projects.folders.length
+      projects.folders.length,
+      (_a2 = snapshot == null ? void 0 : snapshot.strings.projectCountSingular) != null ? _a2 : "{0} folder",
+      (_b = snapshot == null ? void 0 : snapshot.strings.projectCountPlural) != null ? _b : "{0} folders"
     );
     header.appendChild(title);
     container.appendChild(header);

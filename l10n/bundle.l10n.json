@@ -30,5 +30,9 @@
 	"webview.projects.empty": "No project TODOs yet",
 	"webview.inlineCreate.hint": "Type and press Enter to save, Esc to cancel.",
 	"command.todo.completeTodo.title": "Complete TODO",
-	"command.todo.removeTodo.title": "Remove TODO"
+	"command.todo.removeTodo.title": "Remove TODO",
+	"webview.count.todo.singular": "{0} TODO",
+	"webview.count.todo.plural": "{0} TODOs",
+	"webview.count.project.singular": "{0} folder",
+	"webview.count.project.plural": "{0} folders"
 }

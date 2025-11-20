@@ -66,8 +66,10 @@ interface WebviewStrings {
 	inlineCreateHint: string;
 	completeLabel: string;
 	removeLabel: string;
-	todoCountFormat: string;
-	projectCountFormat: string;
+	todoCountSingular: string;
+	todoCountPlural: string;
+	projectCountSingular: string;
+	projectCountPlural: string;
 }
 
 interface InlineState {
@@ -223,8 +225,9 @@ function render(): void {
 	applyPendingFocus();
 }
 
-function formatCount(format: string, count: number): string {
-	return format.replace('{0}', count.toString());
+function formatCount(count: number, singular: string, plural: string): string {
+	const template = count === 1 ? singular : plural;
+	return template.replace('{0}', count.toString());
 }
 
 function renderScopeSection(state: WebviewScopeState, scope: WebviewScope): HTMLElement {
@@ -233,7 +236,11 @@ function renderScopeSection(state: WebviewScopeState, scope: WebviewScope): HTML
 
 	const header = document.createElement('header');
 	const title = document.createElement('h2');
-	title.textContent = formatCount(snapshot?.strings.todoCountFormat ?? '{0} TODOs', state.todos.length);
+	title.textContent = formatCount(
+		state.todos.length,
+		snapshot?.strings.todoCountSingular ?? '{0} TODO',
+		snapshot?.strings.todoCountPlural ?? '{0} TODOs'
+	);
 	header.appendChild(title);
 
 	const actions = document.createElement('div');
@@ -286,8 +293,9 @@ function renderProjectsSection(projects: WebviewProjectsState): HTMLElement {
 	const header = document.createElement('header');
 	const title = document.createElement('h2');
 	title.textContent = formatCount(
-		snapshot?.strings.projectCountFormat ?? '{0} folders',
-		projects.folders.length
+		projects.folders.length,
+		snapshot?.strings.projectCountSingular ?? '{0} folder',
+		snapshot?.strings.projectCountPlural ?? '{0} folders'
 	);
 	header.appendChild(title);
 	container.appendChild(header);
