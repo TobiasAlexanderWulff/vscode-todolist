@@ -21,7 +21,27 @@
             "type": "npm",
             "script": "watch:esbuild",
             "group": "build",
-            "problemMatcher": "$esbuild-watch",
+            "problemMatcher": {
+                "owner": "esbuild",
+                "fileLocation": "relative",
+                "pattern": [
+                    {
+                        "regexp": "^✘ \\[ERROR\\] (.*)$",
+                        "message": 1
+                    },
+                    {
+                        "regexp": "^\\s*(.*):(\\d+):(\\d+):$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^\\[.*\\] build started$",
+                    "endsPattern": "^\\[.*\\] build finished$"
+                }
+            },
             "isBackground": true,
             "label": "npm: watch:esbuild",
             "presentation": {

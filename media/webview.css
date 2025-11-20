@@ -1,143 +1,177 @@
 :root {
-	color: var(--vscode-foreground);
-	background-color: transparent;
-	font-family: var(--vscode-font-family, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
-	font-size: 13px;
+  color: var(--vscode-foreground);
+  background-color: transparent;
+  font-family: var(
+    --vscode-font-family,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif
+  );
+  font-size: 13px;
 }
 
 body {
-	margin: 0;
-	padding: 0;
-	color: inherit;
-	background-color: transparent;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  background-color: transparent;
 }
 
 main {
-	padding: 0.5rem;
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .todo-section {
-	background-color: var(--vscode-sideBar-background, rgba(255, 255, 255, 0.02));
-	border: 1px solid var(--vscode-panel-border, rgba(255, 255, 255, 0.08));
-	border-radius: 6px;
-	padding: 0.5rem;
+  background-color: var(--vscode-sideBar-background, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--vscode-panel-border, rgba(255, 255, 255, 0.08));
+  border-radius: 6px;
+  padding: 0.5rem;
 }
 
 .todo-section header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0.5rem;
-	margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .todo-section header h2 {
-	font-size: 0.95rem;
-	font-weight: 600;
-	margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
 }
 
 .todo-section header .section-actions {
-	display: flex;
-	gap: 0.25rem;
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
 }
 
 .button-link {
-	padding: 0.1rem 0.4rem;
-	border: 1px solid transparent;
-	border-radius: 4px;
-	background: transparent;
-	color: var(--vscode-textLink-foreground, inherit);
-	cursor: pointer;
-	font-size: 0.85rem;
+  padding: 0 0.4rem;
+  height: 20px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--vscode-textLink-foreground, inherit);
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  line-height: normal;
+}
+
+.button-link svg {
+  width: 14px;
+  height: 14px;
+  display: block;
 }
 
 .button-link:hover {
-	border-color: var(--vscode-textLink-foreground, currentColor);
+  border-color: var(--vscode-textLink-foreground, currentColor);
 }
 
 .todo-list {
-	display: flex;
-	flex-direction: column;
-	gap: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .todo-item {
-	display: flex;
-	align-items: center;
-	gap: 0.35rem;
-	padding: 0.35rem 0.4rem;
-	border-radius: 4px;
-	background: var(--vscode-editorWidget-background, rgba(255, 255, 255, 0.02));
-	border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.4rem;
+  border-radius: 4px;
+  background: var(--vscode-editorWidget-background, rgba(255, 255, 255, 0.02));
+  border: 1px solid transparent;
 }
 
-.todo-item[draggable='true'] {
-	cursor: grab;
+.todo-item[draggable="true"] {
+  cursor: grab;
 }
 
 .todo-item.drag-over {
-	border-color: var(--vscode-focusBorder);
+  border-color: var(--vscode-focusBorder);
 }
 
 .todo-title {
-	flex: 1;
-	word-break: break-word;
+  flex: 1;
+  word-break: break-word;
+  line-height: 22px;
 }
 
 .todo-title.completed {
-	text-decoration: line-through;
-	opacity: 0.6;
+  text-decoration: line-through;
+  opacity: 0.6;
 }
 
 .todo-input {
-	flex: 1;
-	padding: 0.2rem 0.3rem;
-	border-radius: 4px;
-	border: 1px solid var(--vscode-input-border, rgba(255, 255, 255, 0.15));
-	background: var(--vscode-input-background);
-	color: inherit;
+  flex: 1;
+  padding: 0.2rem 0.3rem;
+  border-radius: 4px;
+  border: 1px solid var(--vscode-input-border, rgba(255, 255, 255, 0.15));
+  background: var(--vscode-input-background);
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
 }
 
 .todo-actions {
-	display: flex;
-	align-items: center;
-	gap: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
 }
 
 .todo-action {
-	border: 1px solid transparent;
-	background: transparent;
-	border-radius: 4px;
-	padding: 0.15rem 0.3rem;
-	cursor: pointer;
-	color: inherit;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 4px;
+  padding: 0;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.todo-action svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .todo-action:hover {
-	background: var(--vscode-toolbar-hoverBackground, rgba(255, 255, 255, 0.05));
+  background: var(--vscode-toolbar-hoverBackground, rgba(255, 255, 255, 0.05));
 }
 
 .inline-hint {
-	font-size: 0.75rem;
-	opacity: 0.75;
+  font-size: 0.75rem;
+  opacity: 0.75;
 }
 
 .empty-state {
-	font-size: 0.85rem;
-	opacity: 0.8;
-	padding: 0.3rem 0.4rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+  padding: 0.3rem 0.4rem;
 }
 
 .workspace-section {
-	margin-top: 0.75rem;
+  margin-top: 0.75rem;
 }
 
 .workspace-title {
-	font-size: 0.9rem;
-	font-weight: 600;
-	margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
 }

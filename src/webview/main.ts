@@ -277,13 +277,13 @@ function renderProjectsSection(projects: WebviewProjectsState): HTMLElement {
 
 		const addButton = document.createElement('button');
 		addButton.className = 'button-link';
-		addButton.textContent = '+ Add';
+		addButton.innerHTML = '<span>Add</span>';
 		addButton.addEventListener('click', () => startInlineCreate(scope));
 		workspaceActions.appendChild(addButton);
 
 		const clearButton = document.createElement('button');
 		clearButton.className = 'button-link';
-		clearButton.textContent = 'Clear';
+		clearButton.innerHTML = '<span>Clear</span>';
 		clearButton.addEventListener('click', () => postMessage({ type: 'clearScope', scope }));
 		workspaceActions.appendChild(clearButton);
 
@@ -395,7 +395,9 @@ function renderTodoRow(scope: WebviewScope, todo: WebviewTodoState, inlineState:
 	const toggleButton = document.createElement('button');
 	toggleButton.className = 'todo-action';
 	toggleButton.title = snapshot?.strings.completeLabel ?? 'Toggle complete';
-	toggleButton.textContent = todo.completed ? '↺' : '✓';
+	toggleButton.innerHTML = todo.completed
+		? '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14C11.3137 14 14 11.3137 14 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M14 8V4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M14 8H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
+		: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M5 8L7 10L11 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 	toggleButton.addEventListener('click', () => postMessage({
 		type: 'toggleComplete',
 		scope,
@@ -405,14 +407,14 @@ function renderTodoRow(scope: WebviewScope, todo: WebviewTodoState, inlineState:
 
 	const editButton = document.createElement('button');
 	editButton.className = 'todo-action';
-	editButton.textContent = '✎';
+	editButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path transform="translate(0, 2)" d="M12.5 3.5L10 1L3 8V10.5H5.5L12.5 3.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 	editButton.title = 'Edit';
 	editButton.addEventListener('click', () => startInlineEdit(scope, todo.id));
 	actions.appendChild(editButton);
 
 	const removeButton = document.createElement('button');
 	removeButton.className = 'todo-action';
-	removeButton.textContent = '✕';
+	removeButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
 	removeButton.title = snapshot?.strings.removeLabel ?? 'Remove';
 	removeButton.addEventListener('click', () => postMessage({
 		type: 'removeTodo',
