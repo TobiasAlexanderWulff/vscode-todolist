@@ -1,8 +1,8 @@
-# vscode-todo
+# vscode-todolist
 
 Lightweight todos that live where you work: keep personal tasks alongside project tasks in one Activity Bar home.
 
-![Version](https://img.shields.io/badge/version-0.2.0-blue?label=Version) ![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey)
+![Version](https://img.shields.io/badge/version-0.2.1-blue?label=Version) ![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey)
 
 ## Two scopes, one view
 - **Global (profile-bound):** your personal list follows your VS Code profile everywhere.

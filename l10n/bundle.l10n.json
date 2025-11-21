@@ -1,5 +1,5 @@
 {
-	"extension.activatedLog": "vscode-todo extension activated.",
+	"extension.activatedLog": "vscode-todolist extension activated.",
 	"tree.global.label": "Global",
 	"tree.projects.label": "Projects",
 	"tree.projects.empty": "Open a folder to track project TODOs",

@@ -1,14 +1,14 @@
 {
-  "name": "vscode-todo",
-  "displayName": "vscode-todo",
+  "name": "vscode-todolist",
+  "displayName": "vscode-todolist",
   "description": "Keep your project and profile TODO lists up to date.",
   "publisher": "TobiasWulff",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "icon": "resources/store-icon.png",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tobiasalexanderwulff/vscode-todo.git"
+    "url": "https://github.com/TobiasAlexanderWulff/vscode-todolist.git"
   },
   "engines": {
     "vscode": "^1.104.0"

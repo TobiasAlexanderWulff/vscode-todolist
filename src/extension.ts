@@ -40,7 +40,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 	});
 	broadcastWebviewState(webviewHost, repository);
 
-	console.log(l10n.t('extension.activatedLog', 'vscode-todo extension activated.'));
+	console.log(l10n.t('extension.activatedLog', 'vscode-todolist extension activated.'));
 }
 
 export function deactivate(): void {
