@@ -6,8 +6,19 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-11-21
+
+### Added
+- Added an undo toast for single-item removals to mirror the clear-undo flow.
+- Refreshed the marketplace/store icon asset.
+
 ### Changed
-- Added repository metadata and MIT license for marketplace packaging.
+- Polished the webview UI: switched action buttons to inline SVGs, removed redundant toolbar icons, and refined header spacing/toolbar layout.
+- Block drag-and-drop while an inline edit is active and end inline edits on blur for smoother interactions.
+
+### Fixed
+- Corrected clear-scope message formatting, undo placeholders, and removal toast wording.
+- Smoothed global/workspace header spacing and padding to keep sections aligned.
 
 ## [0.1.0] - 2025-11-20
 
