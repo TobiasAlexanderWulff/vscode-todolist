@@ -272,9 +272,16 @@
         }
       });
       input.addEventListener("blur", () => {
-        if (input.value.trim().length === 0) {
+        const trimmed = input.value.trim();
+        if (trimmed.length === 0) {
           exitInlineEdit(scope);
+          return;
         }
+        if (trimmed === todo.title) {
+          exitInlineEdit(scope);
+          return;
+        }
+        commitInlineEdit(scope, todo.id, trimmed);
       });
       row.appendChild(input);
     } else {
