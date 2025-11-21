@@ -3,7 +3,7 @@
   "displayName": "vscode-todo",
   "description": "Keep your project and profile TODO lists up to date.",
   "publisher": "TobiasWulff",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "icon": "resources/store-icon.png",
   "license": "MIT",
   "repository": {
