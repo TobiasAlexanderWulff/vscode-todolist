@@ -1,3 +1,5 @@
+/** Shared testing utilities and fakes for the todo extension. */
+
 import * as vscode from 'vscode';
 
 import * as config from '../adapters/config';
@@ -39,6 +41,7 @@ const workspaceFoldersDescriptor = Object.getOwnPropertyDescriptor(
 	'workspaceFolders'
 );
 
+/** Overrides VS Code workspace folders for the duration of a test. */
 export function overrideWorkspaceFolders(folders: readonly vscode.WorkspaceFolder[]): void {
 	Object.defineProperty(vscode.workspace, 'workspaceFolders', {
 		get: () => folders,
@@ -46,6 +49,7 @@ export function overrideWorkspaceFolders(folders: readonly vscode.WorkspaceFolde
 	});
 }
 
+/** Restores the workspaceFolders descriptor after a test finishes. */
 export function restoreWorkspaceFoldersDescriptor(): void {
 	if (workspaceFoldersDescriptor) {
 		Object.defineProperty(vscode.workspace, 'workspaceFolders', workspaceFoldersDescriptor);
@@ -63,6 +67,7 @@ export function stubReadConfig(next: config.TodoConfig): () => void {
 	};
 }
 
+/** Lightweight stub of the webview host that records outbound messages for assertions. */
 export class FakeWebviewHost implements Pick<TodoWebviewHost, 'postMessage' | 'broadcast'> {
 	readonly postMessages: Array<{ mode: string; message: OutboundMessage }> = [];
 	readonly broadcastMessages: OutboundMessage[] = [];

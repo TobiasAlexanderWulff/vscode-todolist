@@ -15,11 +15,18 @@ import {
 	WebviewScope,
 } from '../types/webviewMessages';
 
+/** Result of processing a webview mutation message. */
 interface MutationResult {
 	mutated: boolean;
 	broadcastHandled?: boolean;
 }
 
+/**
+ * Routes incoming webview messages to repository operations and broadcasts state updates.
+ *
+ * @param event - Message event from a specific webview provider.
+ * @param context - Handler context containing repository and coordination utilities.
+ */
 export async function handleWebviewMessage(
 	event: { mode: ProviderMode; message: InboundMessage },
 	context: HandlerContext
@@ -50,6 +57,13 @@ export async function handleWebviewMessage(
 	}
 }
 
+/**
+ * Executes a mutation based on the inbound webview message.
+ *
+ * @param message - Message from the webview runtime.
+ * @param context - Handler context for repository access.
+ * @returns Whether a mutation occurred and if broadcasting has already happened.
+ */
 async function handleWebviewMutation(
 	message: WebviewMessageEvent['message'],
 	context: HandlerContext
@@ -87,6 +101,14 @@ async function handleWebviewMutation(
 	}
 }
 
+/**
+ * Handles creation of a todo originating from inline webview input.
+ *
+ * @param repository - Repository to persist the new todo into.
+ * @param scope - Scope descriptor from the webview.
+ * @param title - Title entered by the user.
+ * @returns Whether a mutation occurred.
+ */
 async function handleWebviewCreate(
 	repository: TodoRepository,
 	scope: WebviewScope,
@@ -108,6 +130,15 @@ async function handleWebviewCreate(
 	return true;
 }
 
+/**
+ * Handles inline edit commit from the webview.
+ *
+ * @param repository - Repository to persist changes into.
+ * @param scope - Scope descriptor from the webview.
+ * @param todoId - Todo identifier being edited.
+ * @param title - Updated title.
+ * @returns Whether a mutation occurred.
+ */
 async function handleWebviewEdit(
 	repository: TodoRepository,
 	scope: WebviewScope,
@@ -158,6 +189,13 @@ async function handleWebviewToggle(
 	return true;
 }
 
+/**
+ * Removes a todo initiated from the webview with undo handling.
+ *
+ * @param context - Handler context with repository and webview host.
+ * @param scope - Scope descriptor from the webview.
+ * @param todoId - Todo identifier to remove.
+ */
 async function handleWebviewRemoveWithUndo(
 	context: HandlerContext,
 	scope: WebviewScope,
@@ -176,6 +214,14 @@ async function handleWebviewRemoveWithUndo(
 	return { mutated: removed, broadcastHandled: removed };
 }
 
+/**
+ * Reorders todos based on drag-and-drop order supplied by the webview.
+ *
+ * @param repository - Repository to persist ordering into.
+ * @param scope - Scope descriptor from the webview.
+ * @param order - Ordered todo IDs from the webview DOM.
+ * @returns Whether any positions were updated.
+ */
 async function handleWebviewReorder(
 	repository: TodoRepository,
 	scope: WebviewScope,
@@ -197,6 +243,12 @@ async function handleWebviewReorder(
 	return true;
 }
 
+/**
+ * Broadcasts the latest state to both webview providers.
+ *
+ * @param host - Webview host responsible for dispatch.
+ * @param repository - Repository supplying the state snapshot.
+ */
 function broadcastWebviewState(host: TodoWebviewHost, repository: TodoRepository): void {
 	// Lazy import to avoid circular dep on extension.ts
 	const { buildWebviewStateSnapshot } = require('../webviewState') as typeof import('../webviewState');
@@ -204,6 +256,12 @@ function broadcastWebviewState(host: TodoWebviewHost, repository: TodoRepository
 	host.broadcast({ type: 'stateUpdate', payload: snapshot });
 }
 
+/**
+ * Converts a webview scope descriptor into the repository scope target.
+ *
+ * @param scope - Scope descriptor received from the webview.
+ * @returns Scope target or undefined when workspace info is missing.
+ */
 function scopeFromWebviewScope(scope: WebviewScope): ScopeTarget | undefined {
 	if (scope.scope === 'global') {
 		return { scope: 'global' };
@@ -214,10 +272,23 @@ function scopeFromWebviewScope(scope: WebviewScope): ScopeTarget | undefined {
 	return { scope: 'workspace', workspaceFolder: scope.workspaceFolder };
 }
 
+/**
+ * Reads todos for a scope using the repository helper.
+ *
+ * @param repository - Repository to query.
+ * @param scope - Scope target describing global or workspace storage.
+ */
 function readTodos(repository: TodoRepository, scope: ScopeTarget): Todo[] {
 	return repository.readTodos(scope);
 }
 
+/**
+ * Persists todos for a scope using the repository helper.
+ *
+ * @param repository - Repository to write to.
+ * @param scope - Scope target describing global or workspace storage.
+ * @param todos - Todos to persist.
+ */
 async function persistTodos(repository: TodoRepository, scope: ScopeTarget, todos: Todo[]): Promise<void> {
 	await repository.persistTodos(scope, todos);
 }

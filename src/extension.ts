@@ -15,6 +15,8 @@ import { scopeTargetToWebviewScope, scopeToProviderMode } from './adapters/scope
 
 /**
  * Activation entry point: initializes localization, repositories, webviews, and commands.
+ *
+ * @param context - VS Code extension context for this activation.
  */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
 	await l10n.config({ fsPath: context.asAbsolutePath('l10n/bundle.l10n.json') });
@@ -58,17 +60,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 	console.log(l10n.t('extension.activatedLog', 'vscode-todolist extension activated.'));
 }
 
+/** Clean-up hook triggered when the extension is deactivated by VS Code. */
 export function deactivate(): void {
 	// Nothing to clean up yet.
 }
 
 /**
  * Broadcasts the latest view state to any attached webviews so both panes stay in sync.
+ *
+ * @param host - Webview host that manages both providers.
+ * @param repository - Todo repository to read data from.
  */
 function broadcastWebviewState(host: TodoWebviewHost, repository: TodoRepository): void {
 	const snapshot = buildWebviewStateSnapshot(repository);
 	host.broadcast({ type: 'stateUpdate', payload: snapshot });
 }
 
-// legacy export used by tests; consider updating tests to import router directly
+/** Legacy export used by tests; prefer importing the router directly instead. */
 export const handleWebviewMessage = routeWebviewMessage;

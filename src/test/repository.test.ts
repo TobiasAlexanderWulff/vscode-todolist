@@ -1,3 +1,5 @@
+/** Tests repository persistence and normalization utilities. */
+
 import * as assert from 'assert';
 
 import { TodoRepository } from '../todoRepository';
@@ -22,7 +24,7 @@ function createRepositoryHarness(): RepositoryHarness {
 
 suite('TodoRepository', () => {
 	test('creates scoped todos with metadata', () => {
-const { repository } = createRepositoryHarness();
+		const { repository } = createRepositoryHarness();
 
 		const globalTodo = repository.createTodo({ title: 'Review tests', scope: 'global' });
 		assert.strictEqual(globalTodo.scope, 'global');

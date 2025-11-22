@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import { TodoRepository } from './todoRepository';
 import { Todo } from './types';
 
+/** Serialized snapshot the webview consumes to render both scopes. */
 export interface WebviewStateSnapshot {
 	generatedAt: string;
 	global: WebviewScopeState;
@@ -11,18 +12,21 @@ export interface WebviewStateSnapshot {
 	strings: WebviewStrings;
 }
 
+/** Representation of a single scope section within the webview UI. */
 export interface WebviewScopeState {
 	label: string;
 	emptyLabel: string;
 	todos: WebviewTodoState[];
 }
 
+/** Container of all project/workspace sections. */
 export interface WebviewProjectsState {
 	label: string;
 	emptyLabel: string;
 	folders: WebviewWorkspaceState[];
 }
 
+/** State for a single workspace folder pane. */
 export interface WebviewWorkspaceState {
 	key: string;
 	label: string;
@@ -30,6 +34,7 @@ export interface WebviewWorkspaceState {
 	todos: WebviewTodoState[];
 }
 
+/** Minimal todo shape consumed by the webview runtime. */
 export interface WebviewTodoState {
 	id: string;
 	title: string;
@@ -41,6 +46,7 @@ export interface WebviewTodoState {
 	updatedAt: string;
 }
 
+/** Bundle of localized strings used in the UI. */
 export interface WebviewStrings {
 	addPlaceholder: string;
 	inlineCreateHint: string;
@@ -53,6 +59,9 @@ export interface WebviewStrings {
 /**
  * Collects localized strings and todos per scope so the webviews can render without touching VS
  * Code APIs directly. Sorting happens here to centralize ordering concerns.
+ *
+ * @param repository - Todo repository supplying data for both scopes.
+ * @returns A snapshot ready to send to the webview.
  */
 export function buildWebviewStateSnapshot(repository: TodoRepository): WebviewStateSnapshot {
 	const globalTodos = repository
@@ -100,7 +109,12 @@ export function buildWebviewStateSnapshot(repository: TodoRepository): WebviewSt
 	};
 }
 
-/** Normalizes a repository todo into the slim shape consumed by the webview runtime. */
+/**
+ * Normalizes a repository todo into the slim shape consumed by the webview runtime.
+ *
+ * @param todo - Todo entity persisted in the repository.
+ * @returns Minimal webview-facing todo state.
+ */
 function toTodoState(todo: Todo): WebviewTodoState {
 	return {
 		id: todo.id,

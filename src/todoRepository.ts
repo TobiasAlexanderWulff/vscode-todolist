@@ -23,6 +23,7 @@ interface PersistedWorkspaceState {
 const DEFAULT_GLOBAL_STATE: PersistedGlobalState = { version: SCHEMA_VERSION, todos: [] };
 const DEFAULT_WORKSPACE_STATE: PersistedWorkspaceState = { version: SCHEMA_VERSION, folders: {} };
 
+/** Input parameters used to create a new todo entity prior to persistence. */
 export interface CreateTodoInput {
 	title: string;
 	scope: TodoScope;
@@ -30,6 +31,7 @@ export interface CreateTodoInput {
 	position?: number;
 }
 
+/** Minimal slice of the extension context used by the repository. */
 export type RepositoryContext = Pick<vscode.ExtensionContext, 'globalState' | 'workspaceState'>;
 
 /**
@@ -41,13 +43,21 @@ export class TodoRepository {
 
 	constructor(private readonly context: RepositoryContext) {}
 
-	/** Reads all global-scope todos currently stored in the profile memento. */
+	/**
+	 * Reads all global-scope todos currently stored in the profile memento.
+	 *
+	 * @returns A deep copy of global todos sorted in persisted order.
+	 */
 	getGlobalTodos(): Todo[] {
 		const state = this.getGlobalState();
 		return state.todos.map((entity) => this.toTodo('global', undefined, entity));
 	}
 
-	/** Persists global todos, retaining only fields that belong in the serialized payload. */
+	/**
+	 * Persists global todos, retaining only fields that belong in the serialized payload.
+	 *
+	 * @param todos - Todos to write to the global state memento.
+	 */
 	async saveGlobalTodos(todos: Todo[]): Promise<void> {
 		const payload: PersistedGlobalState = {
 			version: SCHEMA_VERSION,
@@ -58,6 +68,9 @@ export class TodoRepository {
 
 	/**
 	 * Reads todos scoped to a workspace folder. The folder key is normalized to avoid mixing IDs.
+	 *
+	 * @param workspaceFolder - Workspace folder key (URI string) to read.
+	 * @returns A deep copy of workspace todos for the folder.
 	 */
 	getWorkspaceTodos(workspaceFolder: string): Todo[] {
 		const folderKey = this.ensureWorkspaceFolder(workspaceFolder);
@@ -66,7 +79,12 @@ export class TodoRepository {
 		return todos.map((entity) => this.toTodo('workspace', folderKey, entity));
 	}
 
-	/** Persists todos for a workspace folder, overwriting any previous list. */
+	/**
+	 * Persists todos for a workspace folder, overwriting any previous list.
+	 *
+	 * @param workspaceFolder - Workspace folder key (URI string) to write to.
+	 * @param todos - Todos to store for the folder.
+	 */
 	async saveWorkspaceTodos(workspaceFolder: string, todos: Todo[]): Promise<void> {
 		const folderKey = this.ensureWorkspaceFolder(workspaceFolder);
 		const state = this.getWorkspaceState();
@@ -76,6 +94,9 @@ export class TodoRepository {
 
 	/**
 	 * Creates a new todo instance with metadata (ID, timestamps, position) but does not persist it.
+	 *
+	 * @param input - Todo details including scope and optional initial position.
+	 * @returns A hydrated todo ready for insertion.
 	 */
 	createTodo(input: CreateTodoInput): Todo {
 		if (input.scope === 'workspace' && !input.workspaceFolder) {
@@ -94,7 +115,12 @@ export class TodoRepository {
 		};
 	}
 
-	/** Returns the serialized scope key used for snapshot lookup and undo operations. */
+	/**
+	 * Returns the serialized scope key used for snapshot lookup and undo operations.
+	 *
+	 * @param scope - Target scope for todos.
+	 * @param workspaceFolder - Workspace folder key when scope is `workspace`.
+	 */
 	scopeKey(scope: TodoScope, workspaceFolder?: string): ScopeKey {
 		if (scope === 'global') {
 			return 'global';
@@ -105,6 +131,9 @@ export class TodoRepository {
 
 	/**
 	 * Captures a deep copy of todos for a scope so destructive actions can be undone temporarily.
+	 *
+	 * @param scope - Scope key used for the undo cache.
+	 * @param todos - Todos to snapshot.
 	 */
 	captureSnapshot(scope: ScopeKey, todos: Todo[]): void {
 		this.undoSnapshots.set(scope, todos.map((todo) => ({ ...todo })));
@@ -112,6 +141,9 @@ export class TodoRepository {
 
 	/**
 	 * Retrieves and clears a previously captured snapshot. Returns a cloned copy to avoid mutation.
+	 *
+	 * @param scope - Scope key used for the undo cache.
+	 * @returns Snapshot todos or undefined if none exists.
 	 */
 	consumeSnapshot(scope: ScopeKey): Todo[] | undefined {
 		const snapshot = this.undoSnapshots.get(scope);
@@ -119,7 +151,12 @@ export class TodoRepository {
 		return snapshot?.map((todo) => ({ ...todo }));
 	}
 
-	/** Reads todos based on a scope target, abstracting away the getGlobal/getWorkspace call. */
+	/**
+	 * Reads todos based on a scope target, abstracting away the getGlobal/getWorkspace call.
+	 *
+	 * @param scope - Target scope descriptor.
+	 * @returns Todos for the target.
+	 */
 	readTodos(scope: { scope: 'global' } | { scope: 'workspace'; workspaceFolder: string }): Todo[] {
 		if (scope.scope === 'global') {
 			return this.getGlobalTodos();
@@ -127,7 +164,12 @@ export class TodoRepository {
 		return this.getWorkspaceTodos(scope.workspaceFolder);
 	}
 
-	/** Persists todos based on a scope target, abstracting away the saveGlobal/saveWorkspace call. */
+	/**
+	 * Persists todos based on a scope target, abstracting away the saveGlobal/saveWorkspace call.
+	 *
+	 * @param scope - Target scope descriptor.
+	 * @param todos - Todos to write for the scope.
+	 */
 	async persistTodos(
 		scope: { scope: 'global' } | { scope: 'workspace'; workspaceFolder: string },
 		todos: Todo[]

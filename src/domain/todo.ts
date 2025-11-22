@@ -2,6 +2,9 @@ import { Todo } from '../types';
 
 /**
  * Normalizes todo positions to be sequential starting at 1 while preserving order.
+ *
+ * @param todos - List of todos to normalize.
+ * @returns A new array with stable ordering and compact positions.
  */
 export function normalizePositions(todos: Todo[]): Todo[] {
 	return [...todos]
@@ -15,6 +18,10 @@ export function normalizePositions(todos: Todo[]): Todo[] {
 /**
  * Reorders todos in place based on a provided ID order. Unmapped items are appended.
  * Returns whether any positions changed.
+ *
+ * @param todos - Todos to reorder (mutated in place).
+ * @param order - Ordered list of todo IDs from the drag-and-drop source.
+ * @returns True if positions were changed, false otherwise.
  */
 export function reorderTodosByOrder(todos: Todo[], order: string[]): boolean {
 	const lookup = new Map<string, Todo>();

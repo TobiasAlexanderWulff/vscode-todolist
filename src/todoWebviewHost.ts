@@ -1,13 +1,15 @@
 import * as vscode from 'vscode';
+import { InboundMessage, OutboundMessage } from './types/webviewMessages';
 
+/** Supported WebviewView providers within the extension. */
 export type ProviderMode = 'global' | 'projects';
 
+/** Scope metadata used to address the correct webview section. */
 export type WebviewScope =
 	| { scope: 'global' }
 	| { scope: 'workspace'; workspaceFolder: string };
 
-import { InboundMessage, OutboundMessage } from './types/webviewMessages';
-
+/** Envelope emitted when the host receives a message from a webview. */
 export interface WebviewMessageEvent {
 	mode: ProviderMode;
 	message: InboundMessage;
@@ -45,16 +47,28 @@ export class TodoWebviewHost implements vscode.Disposable {
 		});
 	}
 
+	/** Disposes providers and event emitters held by the host. */
 	dispose(): void {
 		this.providers.forEach((provider) => provider.dispose());
 		this.disposables.forEach((disposable) => disposable.dispose());
 		this.onDidReceiveMessageEmitter.dispose();
 	}
 
+	/**
+	 * Sends a single outbound message to a specific webview provider if available.
+	 *
+	 * @param mode - Target provider identifier.
+	 * @param message - Message payload to forward.
+	 */
 	postMessage(mode: ProviderMode, message: OutboundMessage): void {
 		this.providers.get(mode)?.postMessage(message);
 	}
 
+	/**
+	 * Broadcasts a message to all registered webview providers.
+	 *
+	 * @param message - Message payload to forward.
+	 */
 	broadcast(message: OutboundMessage): void {
 		this.providers.forEach((provider) => provider.postMessage(message));
 	}
@@ -83,6 +97,11 @@ class TodoWebviewProvider implements vscode.WebviewViewProvider, vscode.Disposab
 		private readonly onMessage: (message: InboundMessage) => void
 	) {}
 
+	/**
+	 * Called by VS Code to resolve the WebviewView; sets up HTML, CSP, and listeners.
+	 *
+	 * @param webviewView - Webview container provided by VS Code.
+	 */
 	resolveWebviewView(webviewView: vscode.WebviewView): void {
 		this.webviewView = webviewView;
 		this.ready = false;
@@ -99,6 +118,11 @@ class TodoWebviewProvider implements vscode.WebviewViewProvider, vscode.Disposab
 		webviewView.webview.html = this.buildHtml(webviewView.webview);
 	}
 
+	/**
+	 * Posts a message to the webview, buffering if the view has not signaled readiness yet.
+	 *
+	 * @param message - Message payload to send.
+	 */
 	postMessage(message: OutboundMessage): void {
 		if (!this.webviewView || !this.ready) {
 			this.pendingMessages.push(message);
@@ -107,18 +131,25 @@ class TodoWebviewProvider implements vscode.WebviewViewProvider, vscode.Disposab
 		this.webviewView.webview.postMessage(message);
 	}
 
+	/** Marks the webview as ready and flushes any buffered messages. */
 	markReady(): void {
 		this.ready = true;
 		this.flushPendingMessages();
 	}
 
+	/** Cleans up references and pending messages. */
 	dispose(): void {
 		this.webviewView = undefined;
 		this.ready = false;
 		this.pendingMessages = [];
 	}
 
-	/** Builds the static HTML shell for the webview, including strict CSP and mode metadata. */
+	/**
+	 * Builds the static HTML shell for the webview, including strict CSP and mode metadata.
+	 *
+	 * @param webview - Webview instance used to derive resource URIs.
+	 * @returns Full HTML document string.
+	 */
 	private buildHtml(webview: vscode.Webview): string {
 		const nonce = getNonce();
 		const scriptUri = webview.asWebviewUri(
@@ -161,7 +192,11 @@ class TodoWebviewProvider implements vscode.WebviewViewProvider, vscode.Disposab
 	}
 }
 
-/** Generates a 32-character nonce for CSP script tags. */
+/**
+ * Generates a 32-character nonce for CSP script tags.
+ *
+ * @returns Randomly generated nonce string.
+ */
 function getNonce(): string {
 	const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 	let nonce = '';

@@ -1,3 +1,5 @@
+/** Tests command handlers and auto-delete interactions. */
+
 import * as assert from 'assert';
 import { afterEach } from 'mocha';
 import * as vscode from 'vscode';

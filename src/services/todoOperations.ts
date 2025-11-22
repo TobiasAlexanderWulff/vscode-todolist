@@ -5,8 +5,16 @@ import { HandlerContext } from '../types/handlerContext';
 import { ScopeTarget } from '../types/scope';
 import { Todo } from '../types';
 
+/** Milliseconds to retain undo snapshots before discarding them. */
 export const UNDO_SNAPSHOT_TTL_MS = 10_000;
 
+/**
+ * Clears all todos within a scope, handling confirmation, undo, and auto-delete cancellation.
+ *
+ * @param context - Handler context containing repository, host, and auto-delete coordinator.
+ * @param scope - Scope to clear.
+ * @param broadcastState - Callback to refresh webview state after mutation.
+ */
 export async function clearScope(
 	context: HandlerContext,
 	scope: ScopeTarget,
@@ -62,6 +70,15 @@ export async function clearScope(
 	}
 }
 
+/**
+ * Removes a single todo with undo support and auto-delete cleanup.
+ *
+ * @param context - Handler context containing repository, host, and auto-delete coordinator.
+ * @param scope - Scope containing the todo.
+ * @param todoId - Identifier of the todo to remove.
+ * @param broadcastState - Callback to refresh webview state after mutation.
+ * @returns True if a todo was removed.
+ */
 export async function removeTodoWithUndo(
 	context: HandlerContext,
 	scope: ScopeTarget,
@@ -102,6 +119,15 @@ export async function removeTodoWithUndo(
 	return true;
 }
 
+/**
+ * Removes a todo without capturing an undo snapshot, used by auto-delete flows.
+ *
+ * @param context - Handler context containing repository and auto-delete coordinator.
+ * @param scope - Scope containing the todo.
+ * @param todoId - Identifier of the todo to remove.
+ * @param broadcastState - Callback to refresh webview state after mutation.
+ * @returns True if a todo was removed.
+ */
 export async function removeTodoWithoutUndo(
 	context: HandlerContext,
 	scope: ScopeTarget,
@@ -118,6 +144,7 @@ export async function removeTodoWithoutUndo(
 	return true;
 }
 
+/** Reads todos for the provided scope. */
 function readTodos(repository: HandlerContext['repository'], scope: ScopeTarget): Todo[] {
 	if (scope.scope === 'global') {
 		return repository.getGlobalTodos();
@@ -125,6 +152,13 @@ function readTodos(repository: HandlerContext['repository'], scope: ScopeTarget)
 	return repository.getWorkspaceTodos(scope.workspaceFolder);
 }
 
+/**
+ * Persists todos while normalizing positions for stable ordering.
+ *
+ * @param repository - Repository to save to.
+ * @param scope - Scope describing the storage target.
+ * @param todos - Todos to persist.
+ */
 async function persistTodos(
 	repository: HandlerContext['repository'],
 	scope: ScopeTarget,
@@ -140,6 +174,11 @@ async function persistTodos(
 	}
 }
 
+/**
+ * Returns a human-readable label for a scope used in UI messages.
+ *
+ * @param scope - Scope to describe.
+ */
 function describeScope(scope: ScopeTarget): string {
 	if (scope.scope === 'global') {
 		return l10n.t('scope.global.label', 'Global');
@@ -148,6 +187,11 @@ function describeScope(scope: ScopeTarget): string {
 	return folder?.name ?? l10n.t('scope.workspace.unknown', 'Project');
 }
 
+/**
+ * Locates a workspace folder matching the provided key.
+ *
+ * @param key - Workspace folder URI string.
+ */
 function findWorkspaceFolder(key?: string): vscode.WorkspaceFolder | undefined {
 	return (vscode.workspace.workspaceFolders ?? []).find(
 		(folder) => folder.uri.toString() === key
