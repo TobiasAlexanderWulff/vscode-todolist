@@ -3,7 +3,7 @@ import { afterEach } from 'mocha';
 import * as vscode from 'vscode';
 
 import { HandlerContext } from '../types/handlerContext';
-import { addTodo, editTodo } from '../extension';
+import { addTodo, editTodo } from '../adapters/commandRouter';
 import { TodoRepository } from '../todoRepository';
 import { Todo } from '../types';
 import { AutoDeleteCoordinator } from '../services/autoDeleteService';
@@ -178,9 +178,10 @@ suite('Command handlers', () => {
 	});
 
 test('addTodo dispatches inline create after focusing container', async () => {
-		const { repository } = createRepositoryHarness();
-		const host = new FakeWebviewHost();
-		const executedCommands: string[] = [];
+	const { repository } = createRepositoryHarness();
+	const host = new FakeWebviewHost();
+	const autoDelete = createAutoDelete(host);
+	const executedCommands: string[] = [];
 		const executeCommandStub: typeof vscode.commands.executeCommand = async (command: string) => {
 			executedCommands.push(command);
 			return undefined as unknown as never;
@@ -192,7 +193,9 @@ test('addTodo dispatches inline create after focusing container', async () => {
 		(vscode.window as unknown as { showQuickPick: typeof vscode.window.showQuickPick }).showQuickPick =
 			showQuickPickStub;
 
-		await addTodo({ repository, webviewHost: host } as any);
+	await addTodo(toHandlerContext(repository, host, autoDelete), () =>
+		host.broadcast({ type: 'stateUpdate' })
+	);
 
 		assert.deepStrictEqual(executedCommands, ['workbench.view.extension.todoContainer']);
 		assert.ok(
@@ -213,9 +216,10 @@ test('addTodo dispatches inline create after focusing container', async () => {
 			{ uri: folderA, name: 'Workspace A', index: 0 },
 			{ uri: folderB, name: 'Workspace B', index: 1 },
 		]);
-		const { repository } = createRepositoryHarness();
-		const host = new FakeWebviewHost();
-		const executedCommands: string[] = [];
+	const { repository } = createRepositoryHarness();
+	const host = new FakeWebviewHost();
+	const autoDelete = createAutoDelete(host);
+	const executedCommands: string[] = [];
 		const executeCommandStub: typeof vscode.commands.executeCommand = async (command: string) => {
 			executedCommands.push(command);
 			return undefined as unknown as never;
@@ -231,7 +235,9 @@ test('addTodo dispatches inline create after focusing container', async () => {
 		(vscode.window as unknown as { showQuickPick: typeof vscode.window.showQuickPick }).showQuickPick =
 			showQuickPickStub;
 
-		await addTodo({ repository, webviewHost: host } as any);
+	await addTodo(toHandlerContext(repository, host, autoDelete), () =>
+		host.broadcast({ type: 'stateUpdate' })
+	);
 
 		assert.deepStrictEqual(executedCommands, ['workbench.view.extension.todoContainer']);
 		assert.ok(
@@ -250,11 +256,12 @@ test('addTodo dispatches inline create after focusing container', async () => {
 
 	test('editTodo dispatches inline edit for selected todo', async () => {
 		const { repository } = createRepositoryHarness();
-		const todo = repository.createTodo({ title: 'Edit me', scope: 'global' });
-		await repository.saveGlobalTodos([todo]);
+	const todo = repository.createTodo({ title: 'Edit me', scope: 'global' });
+	await repository.saveGlobalTodos([todo]);
 
-		const host = new FakeWebviewHost();
-		const executedCommands: string[] = [];
+	const host = new FakeWebviewHost();
+	const autoDelete = createAutoDelete(host);
+	const executedCommands: string[] = [];
 		const executeCommandStub: typeof vscode.commands.executeCommand = async (command: string) => {
 			executedCommands.push(command);
 			return undefined as unknown as never;
@@ -266,7 +273,9 @@ test('addTodo dispatches inline create after focusing container', async () => {
 		(vscode.window as unknown as { showQuickPick: typeof vscode.window.showQuickPick }).showQuickPick =
 			showQuickPickStub;
 
-		await editTodo({ repository, webviewHost: host } as any);
+	await editTodo(toHandlerContext(repository, host, autoDelete), () =>
+		host.broadcast({ type: 'stateUpdate' })
+	);
 
 		assert.deepStrictEqual(executedCommands, ['workbench.view.extension.todoContainer']);
 		assert.ok(
@@ -287,16 +296,17 @@ test('addTodo dispatches inline create after focusing container', async () => {
 			{ uri: folderA, name: 'Workspace A', index: 0 },
 			{ uri: folderB, name: 'Workspace B', index: 1 },
 		]);
-		const { repository } = createRepositoryHarness();
-		const workspaceTodo = repository.createTodo({
-			title: 'Workspace edit',
-			scope: 'workspace',
-			workspaceFolder: folderB.toString(),
-		});
-		await repository.saveWorkspaceTodos(folderB.toString(), [workspaceTodo]);
+	const { repository } = createRepositoryHarness();
+	const workspaceTodo = repository.createTodo({
+		title: 'Workspace edit',
+		scope: 'workspace',
+		workspaceFolder: folderB.toString(),
+	});
+	await repository.saveWorkspaceTodos(folderB.toString(), [workspaceTodo]);
 
-		const host = new FakeWebviewHost();
-		const executedCommands: string[] = [];
+	const host = new FakeWebviewHost();
+	const autoDelete = createAutoDelete(host);
+	const executedCommands: string[] = [];
 		const executeCommandStub: typeof vscode.commands.executeCommand = async (command: string) => {
 			executedCommands.push(command);
 			return undefined as unknown as never;
@@ -308,7 +318,9 @@ test('addTodo dispatches inline create after focusing container', async () => {
 		(vscode.window as unknown as { showQuickPick: typeof vscode.window.showQuickPick }).showQuickPick =
 			showQuickPickStub;
 
-		await editTodo({ repository, webviewHost: host } as any);
+	await editTodo(toHandlerContext(repository, host, autoDelete), () =>
+		host.broadcast({ type: 'stateUpdate' })
+	);
 
 		assert.deepStrictEqual(executedCommands, ['workbench.view.extension.todoContainer']);
 		assert.ok(
