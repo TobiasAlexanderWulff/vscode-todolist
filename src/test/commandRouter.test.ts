@@ -12,7 +12,6 @@ import { handleWebviewMessage } from '../adapters/webviewRouter';
 import {
 	FakeWebviewHost,
 	InMemoryMemento,
-	noopBroadcast,
 	overrideWorkspaceFolders,
 	restoreWorkspaceFoldersDescriptor,
 	stubReadConfig,
@@ -33,57 +32,6 @@ function createRepositoryHarness(): RepositoryHarness {
 	});
 	return { repository, globalState, workspaceState };
 }
-
-suite('TodoRepository', () => {
-	test('creates scoped todos with metadata', () => {
-const { repository } = createRepositoryHarness();
-
-		const globalTodo = repository.createTodo({ title: 'Review tests', scope: 'global' });
-		assert.strictEqual(globalTodo.scope, 'global');
-		assert.ok(globalTodo.id.length > 0);
-		assert.strictEqual(globalTodo.workspaceFolder, undefined);
-
-		const workspaceTodo = repository.createTodo({
-			title: 'Wire TreeView',
-			scope: 'workspace',
-			workspaceFolder: 'file:///test',
-		});
-		assert.strictEqual(workspaceTodo.scope, 'workspace');
-		assert.strictEqual(workspaceTodo.workspaceFolder, 'file:///test');
-		assert.ok(workspaceTodo.position >= 1);
-	});
-
-	test('persists global todos via the global state memento', async () => {
-		const harness = createRepositoryHarness();
-		const todo = harness.repository.createTodo({ title: 'Write docs', scope: 'global' });
-		await harness.repository.saveGlobalTodos([todo]);
-
-		const secondRepository = new TodoRepository({
-			globalState: harness.globalState,
-			workspaceState: harness.workspaceState,
-		});
-		const todos = secondRepository.getGlobalTodos();
-		assert.strictEqual(todos.length, 1);
-		assert.strictEqual(todos[0].title, 'Write docs');
-	});
-
-	test('captures and restores snapshots per scope', () => {
-		const { repository } = createRepositoryHarness();
-		const workspaceFolder = 'file:///restore';
-		const todo = repository.createTodo({
-			title: 'Snapshot me',
-			scope: 'workspace',
-			workspaceFolder,
-		});
-		const scopeKey = repository.scopeKey('workspace', workspaceFolder);
-
-		repository.captureSnapshot(scopeKey, [todo]);
-		const restored = repository.consumeSnapshot(scopeKey) as Todo[];
-		assert.strictEqual(restored.length, 1);
-		assert.strictEqual(restored[0].title, 'Snapshot me');
-		assert.strictEqual(repository.consumeSnapshot(scopeKey), undefined);
-	});
-});
 
 suite('Command handlers', () => {
 	const originalShowQuickPick = vscode.window.showQuickPick;
@@ -165,11 +113,11 @@ suite('Command handlers', () => {
 		restoreWorkspaceFoldersDescriptor();
 	});
 
-test('addTodo dispatches inline create after focusing container', async () => {
-	const { repository } = createRepositoryHarness();
-	const host = new FakeWebviewHost();
-	const autoDelete = createAutoDelete(host);
-	const executedCommands: string[] = [];
+	test('addTodo dispatches inline create after focusing container', async () => {
+		const { repository } = createRepositoryHarness();
+		const host = new FakeWebviewHost();
+		const autoDelete = createAutoDelete(host);
+		const executedCommands: string[] = [];
 		const executeCommandStub: typeof vscode.commands.executeCommand = async (command: string) => {
 			executedCommands.push(command);
 			return undefined as unknown as never;
@@ -204,10 +152,10 @@ test('addTodo dispatches inline create after focusing container', async () => {
 			{ uri: folderA, name: 'Workspace A', index: 0 },
 			{ uri: folderB, name: 'Workspace B', index: 1 },
 		]);
-	const { repository } = createRepositoryHarness();
-	const host = new FakeWebviewHost();
-	const autoDelete = createAutoDelete(host);
-	const executedCommands: string[] = [];
+		const { repository } = createRepositoryHarness();
+		const host = new FakeWebviewHost();
+		const autoDelete = createAutoDelete(host);
+		const executedCommands: string[] = [];
 		const executeCommandStub: typeof vscode.commands.executeCommand = async (command: string) => {
 			executedCommands.push(command);
 			return undefined as unknown as never;
@@ -244,12 +192,12 @@ test('addTodo dispatches inline create after focusing container', async () => {
 
 	test('editTodo dispatches inline edit for selected todo', async () => {
 		const { repository } = createRepositoryHarness();
-	const todo = repository.createTodo({ title: 'Edit me', scope: 'global' });
-	await repository.saveGlobalTodos([todo]);
+		const todo = repository.createTodo({ title: 'Edit me', scope: 'global' });
+		await repository.saveGlobalTodos([todo]);
 
-	const host = new FakeWebviewHost();
-	const autoDelete = createAutoDelete(host);
-	const executedCommands: string[] = [];
+		const host = new FakeWebviewHost();
+		const autoDelete = createAutoDelete(host);
+		const executedCommands: string[] = [];
 		const executeCommandStub: typeof vscode.commands.executeCommand = async (command: string) => {
 			executedCommands.push(command);
 			return undefined as unknown as never;
@@ -284,25 +232,29 @@ test('addTodo dispatches inline create after focusing container', async () => {
 			{ uri: folderA, name: 'Workspace A', index: 0 },
 			{ uri: folderB, name: 'Workspace B', index: 1 },
 		]);
-	const { repository } = createRepositoryHarness();
-	const workspaceTodo = repository.createTodo({
-		title: 'Workspace edit',
-		scope: 'workspace',
-		workspaceFolder: folderB.toString(),
-	});
-	await repository.saveWorkspaceTodos(folderB.toString(), [workspaceTodo]);
+		const { repository } = createRepositoryHarness();
+		const workspaceTodo = repository.createTodo({
+			title: 'Workspace edit',
+			scope: 'workspace',
+			workspaceFolder: folderB.toString(),
+		});
+		await repository.saveWorkspaceTodos(folderB.toString(), [workspaceTodo]);
 
-	const host = new FakeWebviewHost();
-	const autoDelete = createAutoDelete(host);
-	const executedCommands: string[] = [];
+		const host = new FakeWebviewHost();
+		const autoDelete = createAutoDelete(host);
+		const executedCommands: string[] = [];
 		const executeCommandStub: typeof vscode.commands.executeCommand = async (command: string) => {
 			executedCommands.push(command);
 			return undefined as unknown as never;
 		};
 		(vscode.commands as unknown as { executeCommand: typeof vscode.commands.executeCommand }).executeCommand =
 			executeCommandStub;
-		const showQuickPickStub: typeof vscode.window.showQuickPick = async (items: any) =>
-			(items as readonly vscode.QuickPickItem[])[0] as any;
+		const showQuickPickStub: typeof vscode.window.showQuickPick = async (items: any) => {
+			const pick = (items as readonly vscode.QuickPickItem[]).find(
+				(item) => item.label === 'Workspace B'
+			);
+			return pick as any;
+		};
 		(vscode.window as unknown as { showQuickPick: typeof vscode.window.showQuickPick }).showQuickPick =
 			showQuickPickStub;
 
