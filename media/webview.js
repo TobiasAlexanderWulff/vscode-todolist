@@ -1,1 +1,475 @@
-"use strict";(()=>{var I=acquireVsCodeApi(),N,L=(N=document.body.dataset.viewMode)!=null?N:"global",w=document.getElementById("root"),d,b={creating:!1,editingId:void 0},v=new Map,E=new Set;R();u();window.addEventListener("message",e=>{let t=e.data;switch(t.type){case"stateUpdate":D(t.payload);break;case"startInlineCreate":F(t.scope);break;case"startInlineEdit":P(t.scope,t.todoId);break;default:break}});I.postMessage({type:"webviewReady",mode:L});function D(e){d=e,q(),u()}function F(e){if(!y(e))return;let t=g(e);t.creating=!0,t.editingId=void 0,C(`[data-inline-create="${T(e)}"]`),m(),u()}function P(e,t){if(!y(e))return;let n=g(e);n.creating=!1,n.editingId=t,C(`[data-inline-edit="${t}"]`),m(),u()}function y(e){return L==="global"?e.scope==="global":e.scope==="workspace"}function R(){var t,n;let e=I.getState();e&&(Object.assign(b,(t=e.global)!=null?t:{creating:!1}),Object.entries((n=e.workspaces)!=null?n:{}).forEach(([i,r])=>{v.set(i,{creating:r.creating,editingId:r.editingId})}))}function m(){let e={global:{...b},workspaces:{}};v.forEach((t,n)=>{e.workspaces[n]={...t}}),I.setState(e)}function g(e){if(e.scope==="global")return b;let t=v.get(e.workspaceFolder);return t||(t={creating:!1},v.set(e.workspaceFolder,t)),t}function q(){if(!d)return;if(L==="global"){b.editingId&&!d.global.todos.some(t=>t.id===b.editingId)&&(b.editingId=void 0);return}let e=new Set(d.projects.folders.map(t=>t.key));Array.from(v.keys()).forEach(t=>{e.has(t)||v.delete(t)}),v.forEach((t,n)=>{let i=d==null?void 0:d.projects.folders.find(r=>r.key===n);i&&t.editingId&&!i.todos.some(r=>r.id===t.editingId)&&(t.editingId=void 0)})}function u(){if(!d){w.innerHTML='<p class="empty-state">Waiting for TODOs\u2026</p>';return}w.innerHTML="",L==="global"?w.appendChild($(d.global,{scope:"global"})):w.appendChild(O(d.projects)),z()}function $(e,t){let n=document.createElement("section");n.className="todo-section";let i=document.createElement("header"),r=document.createElement("h2");r.textContent=e.label,i.appendChild(r),i.appendChild(x(t)),n.appendChild(i);let a=document.createElement("div");a.className="todo-list";let o=g(t);if(o.creating&&a.appendChild(A(t)),e.todos.forEach(s=>{a.appendChild(B(t,s,o))}),e.todos.length===0&&!o.creating){let s=document.createElement("p");s.className="empty-state",s.textContent=e.emptyLabel,a.appendChild(s)}return j(a,t,o),n.appendChild(a),n}function O(e){let t=document.createElement("section");if(t.className="todo-section",e.folders.length===0){let n=document.createElement("p");return n.className="empty-state",n.textContent=e.emptyLabel,t.appendChild(n),t}return e.folders.forEach(n=>{var f;let i={scope:"workspace",workspaceFolder:n.key},r=g(i),a=document.createElement("div");a.className="workspace-section";let o=document.createElement("div");o.className="workspace-title",o.textContent=n.label;let s=document.createElement("header");s.appendChild(o),s.appendChild(x(i)),a.appendChild(s);let c=document.createElement("div");if(c.className="todo-list",r.creating&&c.appendChild(A(i)),n.todos.forEach(l=>{c.appendChild(B(i,l,r))}),n.todos.length===0&&!r.creating){let l=document.createElement("p");l.className="empty-state",l.textContent=(f=d==null?void 0:d.projects.emptyLabel)!=null?f:"",c.appendChild(l)}j(c,i,r),a.appendChild(c),t.appendChild(a)}),t}function x(e){var r,a;let t=document.createElement("div");t.className="section-actions";let n=document.createElement("button");n.className="button-link",n.innerHTML=`<span>${(r=d==null?void 0:d.strings.addLabel)!=null?r:"Add"}</span>`,n.addEventListener("click",()=>V(e)),t.appendChild(n);let i=document.createElement("button");return i.className="button-link",i.innerHTML=`<span>${(a=d==null?void 0:d.strings.clearLabel)!=null?a:"Clear"}</span>`,i.addEventListener("click",()=>S({type:"clearScope",scope:e})),t.appendChild(i),t}function A(e){var r,a;let t=document.createElement("div");t.className="todo-item inline-create";let n=document.createElement("input");n.className="todo-input",n.placeholder=(r=d==null?void 0:d.strings.addPlaceholder)!=null?r:"Type a TODO",n.dataset.inlineCreate=T(e),n.addEventListener("keydown",o=>{o.key==="Enter"&&(o.preventDefault(),U(e,n.value)),o.key==="Escape"&&(o.preventDefault(),W(e))}),n.addEventListener("blur",()=>{n.value.trim().length===0&&W(e)}),t.appendChild(n);let i=document.createElement("small");return i.className="inline-hint",i.textContent=(a=d==null?void 0:d.strings.inlineCreateHint)!=null?a:"",t.appendChild(i),t}function B(e,t,n){var c,f;let i=document.createElement("div");if(i.className="todo-item",i.dataset.todoId=t.id,i.draggable=!n.editingId,n.editingId===t.id){let l=document.createElement("input");l.className="todo-input",l.value=t.title,l.dataset.inlineEdit=t.id,l.addEventListener("keydown",p=>{p.key==="Enter"&&(p.preventDefault(),H(e,t.id,l.value)),p.key==="Escape"&&(p.preventDefault(),h(e))}),l.addEventListener("blur",()=>{let p=l.value.trim();if(p.length===0){h(e);return}if(p===t.title){h(e);return}H(e,t.id,p)}),i.appendChild(l)}else{let l=document.createElement("span");l.className=`todo-title${t.completed?" completed":""}`,l.textContent=t.title,l.addEventListener("dblclick",()=>M(e,t.id)),i.appendChild(l)}let r=document.createElement("div");r.className="todo-actions";let a=document.createElement("button");a.className="todo-action",a.title=(c=d==null?void 0:d.strings.completeLabel)!=null?c:"Toggle complete",a.innerHTML=t.completed?'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M4.5 8.5L7 11L11.5 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/></svg>',a.addEventListener("click",()=>S({type:"toggleComplete",scope:e,todoId:t.id})),r.appendChild(a);let o=document.createElement("button");o.className="todo-action",o.innerHTML='<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path transform="translate(0, 2)" d="M12.5 3.5L10 1L3 8V10.5H5.5L12.5 3.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',o.title="Edit",o.addEventListener("click",()=>M(e,t.id)),r.appendChild(o);let s=document.createElement("button");return s.className="todo-action",s.innerHTML='<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',s.title=(f=d==null?void 0:d.strings.removeLabel)!=null?f:"Remove",s.addEventListener("click",()=>S({type:"removeTodo",scope:e,todoId:t.id})),r.appendChild(s),i.appendChild(r),i}function V(e){if(!y(e))return;let t=g(e);t.creating=!0,t.editingId=void 0,C(`[data-inline-create="${T(e)}"]`),m(),u()}function W(e){let t=g(e);t.creating=!1,m(),u()}function U(e,t){let n=t.trim();if(n.length===0){W(e);return}S({type:"commitCreate",scope:e,title:n});let i=g(e);i.creating=!1,m()}function M(e,t){if(!y(e))return;let n=g(e);n.creating=!1,n.editingId=t,C(`[data-inline-edit="${t}"]`),m(),u()}function h(e){let t=g(e);t.editingId=void 0,m(),u()}function H(e,t,n){let i=n.trim();if(i.length===0){h(e);return}S({type:"commitEdit",scope:e,todoId:t,title:i});let r=g(e);r.editingId=void 0,m()}function j(e,t,n){let i;e.addEventListener("dragstart",a=>{var s,c;if(n.editingId)return;let o=(s=a.target)==null?void 0:s.closest(".todo-item");!o||!o.dataset.todoId||(i=o.dataset.todoId,(c=a.dataTransfer)==null||c.setData("text/plain",i))}),e.addEventListener("dragover",a=>{var s;if(n.editingId||!i)return;let o=(s=a.target)==null?void 0:s.closest(".todo-item");!o||!o.dataset.todoId||o.dataset.todoId===i||(a.preventDefault(),o.classList.add("drag-over"))}),e.addEventListener("dragleave",a=>{var s;if(n.editingId)return;let o=(s=a.target)==null?void 0:s.closest(".todo-item");o==null||o.classList.remove("drag-over")}),e.addEventListener("drop",a=>{var p;if(n.editingId)return;a.preventDefault();let o=(p=a.target)==null?void 0:p.closest(".todo-item");if(!o||!o.dataset.todoId||!i||o.dataset.todoId===i){r(e);return}let s=e.querySelector(`.todo-item[data-todo-id="${i}"]`);if(!s){r(e);return}let c=o.getBoundingClientRect(),f=a.clientY<c.top+c.height/2;e.insertBefore(s,f?o:o.nextElementSibling);let l=Array.from(e.querySelectorAll(".todo-item")).map(k=>k.dataset.todoId).filter(k=>!!k);S({type:"reorderTodos",scope:t,order:l}),r(e)}),e.addEventListener("dragend",()=>{r(e)});function r(a){i=void 0,a.querySelectorAll(".drag-over").forEach(o=>o.classList.remove("drag-over"))}}function C(e){E.add(e)}function z(){if(E.size===0)return;let e=Array.from(E.values());E.clear(),requestAnimationFrame(()=>{e.forEach(t=>{let n=document.querySelector(t);n&&(n.focus(),n.setSelectionRange(n.value.length,n.value.length))})})}function T(e){return e.scope==="global"?"global":e.workspaceFolder}function S(e){I.postMessage(e)}})();
+"use strict";
+(() => {
+  // src/webview/main.ts
+  var vscode = acquireVsCodeApi();
+  var _a;
+  var viewMode = (_a = document.body.dataset.viewMode) != null ? _a : "global";
+  var root = document.getElementById("root");
+  var snapshot;
+  var inlineGlobal = { creating: false, editingId: void 0 };
+  var inlineWorkspaces = /* @__PURE__ */ new Map();
+  var pendingFocusSelectors = /* @__PURE__ */ new Set();
+  restoreInlineState();
+  render();
+  window.addEventListener("message", (event) => {
+    const message = event.data;
+    switch (message.type) {
+      case "stateUpdate":
+        handleStateUpdate(message.payload);
+        break;
+      case "startInlineCreate":
+        handleStartInlineCreate(message.scope);
+        break;
+      case "startInlineEdit":
+        handleStartInlineEdit(message.scope, message.todoId);
+        break;
+      default:
+        break;
+    }
+  });
+  vscode.postMessage({ type: "webviewReady", mode: viewMode });
+  function handleStateUpdate(nextSnapshot) {
+    snapshot = nextSnapshot;
+    pruneInlineState();
+    render();
+  }
+  function handleStartInlineCreate(scope) {
+    if (!scopeAppliesToView(scope)) {
+      return;
+    }
+    const inlineState = getInlineState(scope);
+    inlineState.creating = true;
+    inlineState.editingId = void 0;
+    queueFocusSelector(`[data-inline-create="${getScopeKey(scope)}"]`);
+    persistInlineState();
+    render();
+  }
+  function handleStartInlineEdit(scope, todoId) {
+    if (!scopeAppliesToView(scope)) {
+      return;
+    }
+    const inlineState = getInlineState(scope);
+    inlineState.creating = false;
+    inlineState.editingId = todoId;
+    queueFocusSelector(`[data-inline-edit="${todoId}"]`);
+    persistInlineState();
+    render();
+  }
+  function scopeAppliesToView(scope) {
+    if (viewMode === "global") {
+      return scope.scope === "global";
+    }
+    return scope.scope === "workspace";
+  }
+  function restoreInlineState() {
+    var _a2, _b;
+    const stored = vscode.getState();
+    if (!stored) {
+      return;
+    }
+    Object.assign(inlineGlobal, (_a2 = stored.global) != null ? _a2 : { creating: false });
+    Object.entries((_b = stored.workspaces) != null ? _b : {}).forEach(([key, state]) => {
+      inlineWorkspaces.set(key, { creating: state.creating, editingId: state.editingId });
+    });
+  }
+  function persistInlineState() {
+    const serialized = {
+      global: { ...inlineGlobal },
+      workspaces: {}
+    };
+    inlineWorkspaces.forEach((state, key) => {
+      serialized.workspaces[key] = { ...state };
+    });
+    vscode.setState(serialized);
+  }
+  function getInlineState(scope) {
+    if (scope.scope === "global") {
+      return inlineGlobal;
+    }
+    let state = inlineWorkspaces.get(scope.workspaceFolder);
+    if (!state) {
+      state = { creating: false };
+      inlineWorkspaces.set(scope.workspaceFolder, state);
+    }
+    return state;
+  }
+  function pruneInlineState() {
+    if (!snapshot) {
+      return;
+    }
+    if (viewMode === "global") {
+      if (inlineGlobal.editingId && !snapshot.global.todos.some((todo) => todo.id === inlineGlobal.editingId)) {
+        inlineGlobal.editingId = void 0;
+      }
+      return;
+    }
+    const folderKeys = new Set(snapshot.projects.folders.map((folder) => folder.key));
+    Array.from(inlineWorkspaces.keys()).forEach((key) => {
+      if (!folderKeys.has(key)) {
+        inlineWorkspaces.delete(key);
+      }
+    });
+    inlineWorkspaces.forEach((state, key) => {
+      const folder = snapshot == null ? void 0 : snapshot.projects.folders.find((item) => item.key === key);
+      if (!folder) {
+        return;
+      }
+      if (state.editingId && !folder.todos.some((todo) => todo.id === state.editingId)) {
+        state.editingId = void 0;
+      }
+    });
+  }
+  function render() {
+    if (!snapshot) {
+      root.innerHTML = '<p class="empty-state">Waiting for TODOs\u2026</p>';
+      return;
+    }
+    root.innerHTML = "";
+    if (viewMode === "global") {
+      root.appendChild(renderScopeSection(snapshot.global, { scope: "global" }));
+    } else {
+      root.appendChild(renderProjectsSection(snapshot.projects));
+    }
+    applyPendingFocus();
+  }
+  function renderScopeSection(state, scope) {
+    const section = document.createElement("section");
+    section.className = "todo-section";
+    const header = document.createElement("header");
+    const title = document.createElement("h2");
+    title.textContent = state.label;
+    header.appendChild(title);
+    header.appendChild(renderSectionActions(scope));
+    section.appendChild(header);
+    const list = document.createElement("div");
+    list.className = "todo-list";
+    const inlineState = getInlineState(scope);
+    if (inlineState.creating) {
+      list.appendChild(renderInlineCreateRow(scope));
+    }
+    state.todos.forEach((todo) => {
+      list.appendChild(renderTodoRow(scope, todo, inlineState));
+    });
+    if (state.todos.length === 0 && !inlineState.creating) {
+      const empty = document.createElement("p");
+      empty.className = "empty-state";
+      empty.textContent = state.emptyLabel;
+      list.appendChild(empty);
+    }
+    attachDragHandlers(list, scope, inlineState);
+    section.appendChild(list);
+    return section;
+  }
+  function renderProjectsSection(projects) {
+    const container = document.createElement("section");
+    container.className = "todo-section";
+    if (projects.folders.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "empty-state";
+      empty.textContent = projects.emptyLabel;
+      container.appendChild(empty);
+      return container;
+    }
+    projects.folders.forEach((folder) => {
+      var _a2;
+      const scope = { scope: "workspace", workspaceFolder: folder.key };
+      const inlineState = getInlineState(scope);
+      const workspaceWrapper = document.createElement("div");
+      workspaceWrapper.className = "workspace-section";
+      const workspaceTitle = document.createElement("div");
+      workspaceTitle.className = "workspace-title";
+      workspaceTitle.textContent = folder.label;
+      const titleRow = document.createElement("header");
+      titleRow.appendChild(workspaceTitle);
+      titleRow.appendChild(renderSectionActions(scope));
+      workspaceWrapper.appendChild(titleRow);
+      const list = document.createElement("div");
+      list.className = "todo-list";
+      if (inlineState.creating) {
+        list.appendChild(renderInlineCreateRow(scope));
+      }
+      folder.todos.forEach((todo) => {
+        list.appendChild(renderTodoRow(scope, todo, inlineState));
+      });
+      if (folder.todos.length === 0 && !inlineState.creating) {
+        const empty = document.createElement("p");
+        empty.className = "empty-state";
+        empty.textContent = (_a2 = snapshot == null ? void 0 : snapshot.projects.emptyLabel) != null ? _a2 : "";
+        list.appendChild(empty);
+      }
+      attachDragHandlers(list, scope, inlineState);
+      workspaceWrapper.appendChild(list);
+      container.appendChild(workspaceWrapper);
+    });
+    return container;
+  }
+  function renderSectionActions(scope) {
+    var _a2, _b;
+    const actions = document.createElement("div");
+    actions.className = "section-actions";
+    const addButton = document.createElement("button");
+    addButton.className = "button-link";
+    addButton.innerHTML = `<span>${(_a2 = snapshot == null ? void 0 : snapshot.strings.addLabel) != null ? _a2 : "Add"}</span>`;
+    addButton.addEventListener("click", () => startInlineCreate(scope));
+    actions.appendChild(addButton);
+    const clearButton = document.createElement("button");
+    clearButton.className = "button-link";
+    clearButton.innerHTML = `<span>${(_b = snapshot == null ? void 0 : snapshot.strings.clearLabel) != null ? _b : "Clear"}</span>`;
+    clearButton.addEventListener("click", () => postMessage({ type: "clearScope", scope }));
+    actions.appendChild(clearButton);
+    return actions;
+  }
+  function renderInlineCreateRow(scope) {
+    var _a2, _b;
+    const row = document.createElement("div");
+    row.className = "todo-item inline-create";
+    const input = document.createElement("input");
+    input.className = "todo-input";
+    input.placeholder = (_a2 = snapshot == null ? void 0 : snapshot.strings.addPlaceholder) != null ? _a2 : "Type a TODO";
+    input.dataset.inlineCreate = getScopeKey(scope);
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        commitInlineCreate(scope, input.value);
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        cancelInlineCreate(scope);
+      }
+    });
+    input.addEventListener("blur", () => {
+      const value = input.value.trim();
+      if (value.length === 0) {
+        cancelInlineCreate(scope);
+      }
+    });
+    row.appendChild(input);
+    const hint = document.createElement("small");
+    hint.className = "inline-hint";
+    hint.textContent = (_b = snapshot == null ? void 0 : snapshot.strings.inlineCreateHint) != null ? _b : "";
+    row.appendChild(hint);
+    return row;
+  }
+  function renderTodoRow(scope, todo, inlineState) {
+    var _a2, _b;
+    const row = document.createElement("div");
+    row.className = "todo-item";
+    row.dataset.todoId = todo.id;
+    row.draggable = !inlineState.editingId;
+    if (inlineState.editingId === todo.id) {
+      const input = document.createElement("input");
+      input.className = "todo-input";
+      input.value = todo.title;
+      input.dataset.inlineEdit = todo.id;
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          commitInlineEdit(scope, todo.id, input.value);
+        }
+        if (event.key === "Escape") {
+          event.preventDefault();
+          exitInlineEdit(scope);
+        }
+      });
+      input.addEventListener("blur", () => {
+        const trimmed = input.value.trim();
+        if (trimmed.length === 0) {
+          exitInlineEdit(scope);
+          return;
+        }
+        if (trimmed === todo.title) {
+          exitInlineEdit(scope);
+          return;
+        }
+        commitInlineEdit(scope, todo.id, trimmed);
+      });
+      row.appendChild(input);
+    } else {
+      const title = document.createElement("span");
+      title.className = `todo-title${todo.completed ? " completed" : ""}`;
+      title.textContent = todo.title;
+      title.addEventListener("dblclick", () => startInlineEdit(scope, todo.id));
+      row.appendChild(title);
+    }
+    const actions = document.createElement("div");
+    actions.className = "todo-actions";
+    const toggleButton = document.createElement("button");
+    toggleButton.className = "todo-action";
+    toggleButton.title = (_a2 = snapshot == null ? void 0 : snapshot.strings.completeLabel) != null ? _a2 : "Toggle complete";
+    toggleButton.innerHTML = todo.completed ? '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M4.5 8.5L7 11L11.5 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/></svg>';
+    toggleButton.addEventListener("click", () => postMessage({
+      type: "toggleComplete",
+      scope,
+      todoId: todo.id
+    }));
+    actions.appendChild(toggleButton);
+    const editButton = document.createElement("button");
+    editButton.className = "todo-action";
+    editButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path transform="translate(0, 2)" d="M12.5 3.5L10 1L3 8V10.5H5.5L12.5 3.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    editButton.title = "Edit";
+    editButton.addEventListener("click", () => startInlineEdit(scope, todo.id));
+    actions.appendChild(editButton);
+    const removeButton = document.createElement("button");
+    removeButton.className = "todo-action";
+    removeButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+    removeButton.title = (_b = snapshot == null ? void 0 : snapshot.strings.removeLabel) != null ? _b : "Remove";
+    removeButton.addEventListener("click", () => postMessage({
+      type: "removeTodo",
+      scope,
+      todoId: todo.id
+    }));
+    actions.appendChild(removeButton);
+    row.appendChild(actions);
+    return row;
+  }
+  function startInlineCreate(scope) {
+    if (!scopeAppliesToView(scope)) {
+      return;
+    }
+    const state = getInlineState(scope);
+    state.creating = true;
+    state.editingId = void 0;
+    queueFocusSelector(`[data-inline-create="${getScopeKey(scope)}"]`);
+    persistInlineState();
+    render();
+  }
+  function cancelInlineCreate(scope) {
+    const state = getInlineState(scope);
+    state.creating = false;
+    persistInlineState();
+    render();
+  }
+  function commitInlineCreate(scope, value) {
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+      cancelInlineCreate(scope);
+      return;
+    }
+    postMessage({ type: "commitCreate", scope, title: trimmed });
+    const state = getInlineState(scope);
+    state.creating = false;
+    persistInlineState();
+  }
+  function startInlineEdit(scope, todoId) {
+    if (!scopeAppliesToView(scope)) {
+      return;
+    }
+    const state = getInlineState(scope);
+    state.creating = false;
+    state.editingId = todoId;
+    queueFocusSelector(`[data-inline-edit="${todoId}"]`);
+    persistInlineState();
+    render();
+  }
+  function exitInlineEdit(scope) {
+    const state = getInlineState(scope);
+    state.editingId = void 0;
+    persistInlineState();
+    render();
+  }
+  function commitInlineEdit(scope, todoId, value) {
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+      exitInlineEdit(scope);
+      return;
+    }
+    postMessage({ type: "commitEdit", scope, todoId, title: trimmed });
+    const state = getInlineState(scope);
+    state.editingId = void 0;
+    persistInlineState();
+  }
+  function attachDragHandlers(list, scope, inlineState) {
+    let draggedId;
+    list.addEventListener("dragstart", (event) => {
+      var _a2, _b;
+      if (inlineState.editingId) {
+        return;
+      }
+      const item = (_a2 = event.target) == null ? void 0 : _a2.closest(".todo-item");
+      if (!item || !item.dataset.todoId) {
+        return;
+      }
+      draggedId = item.dataset.todoId;
+      (_b = event.dataTransfer) == null ? void 0 : _b.setData("text/plain", draggedId);
+    });
+    list.addEventListener("dragover", (event) => {
+      var _a2;
+      if (inlineState.editingId) {
+        return;
+      }
+      if (!draggedId) {
+        return;
+      }
+      const target = (_a2 = event.target) == null ? void 0 : _a2.closest(".todo-item");
+      if (!target || !target.dataset.todoId || target.dataset.todoId === draggedId) {
+        return;
+      }
+      event.preventDefault();
+      target.classList.add("drag-over");
+    });
+    list.addEventListener("dragleave", (event) => {
+      var _a2;
+      if (inlineState.editingId) {
+        return;
+      }
+      const target = (_a2 = event.target) == null ? void 0 : _a2.closest(".todo-item");
+      target == null ? void 0 : target.classList.remove("drag-over");
+    });
+    list.addEventListener("drop", (event) => {
+      var _a2;
+      if (inlineState.editingId) {
+        return;
+      }
+      event.preventDefault();
+      const target = (_a2 = event.target) == null ? void 0 : _a2.closest(".todo-item");
+      if (!target || !target.dataset.todoId || !draggedId || target.dataset.todoId === draggedId) {
+        resetDragState(list);
+        return;
+      }
+      const draggedNode = list.querySelector(`.todo-item[data-todo-id="${draggedId}"]`);
+      if (!draggedNode) {
+        resetDragState(list);
+        return;
+      }
+      const targetRect = target.getBoundingClientRect();
+      const before = event.clientY < targetRect.top + targetRect.height / 2;
+      list.insertBefore(draggedNode, before ? target : target.nextElementSibling);
+      const order = Array.from(list.querySelectorAll(".todo-item")).map((node) => node.dataset.todoId).filter((id) => Boolean(id));
+      postMessage({ type: "reorderTodos", scope, order });
+      resetDragState(list);
+    });
+    list.addEventListener("dragend", () => {
+      resetDragState(list);
+    });
+    function resetDragState(container) {
+      draggedId = void 0;
+      container.querySelectorAll(".drag-over").forEach((el) => el.classList.remove("drag-over"));
+    }
+  }
+  function queueFocusSelector(selector) {
+    pendingFocusSelectors.add(selector);
+  }
+  function applyPendingFocus() {
+    if (pendingFocusSelectors.size === 0) {
+      return;
+    }
+    const selectors = Array.from(pendingFocusSelectors.values());
+    pendingFocusSelectors.clear();
+    requestAnimationFrame(() => {
+      selectors.forEach((selector) => {
+        const element = document.querySelector(selector);
+        if (element) {
+          element.focus();
+          element.setSelectionRange(element.value.length, element.value.length);
+        }
+      });
+    });
+  }
+  function getScopeKey(scope) {
+    return scope.scope === "global" ? "global" : scope.workspaceFolder;
+  }
+  function postMessage(message) {
+    vscode.postMessage(message);
+  }
+})();
+//# sourceMappingURL=webview.js.map
