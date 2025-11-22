@@ -9,6 +9,7 @@ import { Todo } from '../types';
 import { AutoDeleteCoordinator } from '../services/autoDeleteService';
 import { ScopeTarget } from '../types/scope';
 import { handleWebviewMessage } from '../adapters/webviewRouter';
+import { InboundMessage } from '../types/webviewMessages';
 import {
 	FakeWebviewHost,
 	InMemoryMemento,
@@ -296,15 +297,13 @@ suite('Command handlers', () => {
 
 		const host = new FakeWebviewHost();
 		const autoDelete = createAutoDelete(host);
+		const message: InboundMessage = {
+			type: 'reorderTodos',
+			scope: { scope: 'workspace', workspaceFolder: folder.toString() },
+			order: [todoB.id, todoA.id],
+		};
 		await handleWebviewMessage(
-			{
-				mode: 'projects',
-				message: {
-					type: 'reorderTodos',
-					scope: { scope: 'workspace', workspaceFolder: folder.toString() },
-					order: [todoB.id, todoA.id],
-				},
-			} as any,
+			{ mode: 'projects', message },
 			toHandlerContext(repository, host, autoDelete)
 		);
 
@@ -352,14 +351,12 @@ suite('Command handlers', () => {
 				return undefined;
 			};
 
+		const message: InboundMessage = {
+			type: 'clearScope',
+			scope: { scope: 'workspace', workspaceFolder: folder.toString() },
+		};
 		await handleWebviewMessage(
-			{
-				mode: 'projects',
-				message: {
-					type: 'clearScope',
-					scope: { scope: 'workspace', workspaceFolder: folder.toString() },
-				},
-			} as any,
+			{ mode: 'projects', message },
 			toHandlerContext(repository, host, autoDelete)
 		);
 
@@ -395,15 +392,13 @@ suite('Command handlers', () => {
 				return undefined;
 			};
 
+		const message: InboundMessage = {
+			type: 'removeTodo',
+			scope: { scope: 'global' },
+			todoId: todo.id,
+		};
 		await handleWebviewMessage(
-			{
-				mode: 'global',
-				message: {
-					type: 'removeTodo',
-					scope: { scope: 'global' },
-					todoId: todo.id,
-				},
-			} as any,
+			{ mode: 'global', message },
 			toHandlerContext(repository, host, autoDelete)
 		);
 
@@ -442,15 +437,13 @@ suite('Command handlers', () => {
 			confirmDestructiveActions: true,
 		});
 
+		const message: InboundMessage = {
+			type: 'toggleComplete',
+			scope: { scope: 'global' },
+			todoId: todo.id,
+		};
 		await handleWebviewMessage(
-			{
-				mode: 'global',
-				message: {
-					type: 'toggleComplete',
-					scope: { scope: 'global' },
-					todoId: todo.id,
-				},
-			} as any,
+			{ mode: 'global', message },
 			toHandlerContext(repository, host, autoDelete)
 		);
 
@@ -474,15 +467,13 @@ suite('Command handlers', () => {
 			confirmDestructiveActions: true,
 		});
 
+		const message: InboundMessage = {
+			type: 'toggleComplete',
+			scope: { scope: 'global' },
+			todoId: todo.id,
+		};
 		await handleWebviewMessage(
-			{
-				mode: 'global',
-				message: {
-					type: 'toggleComplete',
-					scope: { scope: 'global' },
-					todoId: todo.id,
-				},
-			} as any,
+			{ mode: 'global', message },
 			toHandlerContext(repository, host, autoDelete)
 		);
 
@@ -520,14 +511,12 @@ suite('Command handlers', () => {
 				return undefined;
 			};
 
+		const message: InboundMessage = {
+			type: 'clearScope',
+			scope: { scope: 'global' },
+		};
 		await handleWebviewMessage(
-			{
-				mode: 'global',
-				message: {
-					type: 'clearScope',
-					scope: { scope: 'global' },
-				},
-			} as any,
+			{ mode: 'global', message },
 			toHandlerContext(repository, host, autoDelete)
 		);
 
