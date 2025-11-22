@@ -10,6 +10,7 @@ import {
 } from '../services/todoOperations';
 import { Todo } from '../types';
 import { TodoWebviewHost } from '../todoWebviewHost';
+import { readConfig } from './config';
 
 interface CommandDependencies {
 	context: vscode.ExtensionContext;
@@ -85,7 +86,7 @@ async function toggleTodoCompletion(
 	todo.updatedAt = new Date().toISOString();
 	await persistTodos(context.repository, scope, todos);
 	if (todo.completed) {
-		context.autoDelete.schedule(context, scope, todo.id);
+		context.autoDelete.schedule(context, scope, todo.id, readConfig());
 	} else {
 		context.autoDelete.cancel(scope, todo.id);
 	}

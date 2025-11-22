@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 
+import { readConfig, TodoConfig } from '../adapters/config';
 import { ScopeTarget } from '../types/scope';
 
 const DEFAULT_AUTO_DELETE_DELAY_MS = 1_500;
@@ -27,21 +28,15 @@ export class AutoDeleteCoordinator<TContext> implements vscode.Disposable {
 
 	constructor(private readonly handlers: AutoDeleteHandlers<TContext> = {}) {}
 
-	schedule(context: TContext, scope: ScopeTarget, todoId: string): void {
-		const configuration = vscode.workspace.getConfiguration('todo');
-		const enabled = configuration.get<boolean>('autoDeleteCompleted', true);
+	schedule(context: TContext, scope: ScopeTarget, todoId: string, config?: TodoConfig): void {
+		const configuration = config ?? readConfig();
+		const enabled = configuration.autoDeleteCompleted;
 		if (!enabled) {
 			this.cancel(scope, todoId);
 			return;
 		}
-		const delay = this.sanitizeDelay(
-			configuration.get<number>('autoDeleteDelayMs', DEFAULT_AUTO_DELETE_DELAY_MS),
-			DEFAULT_AUTO_DELETE_DELAY_MS
-		);
-		const fadeDuration = this.sanitizeDelay(
-			configuration.get<number>('autoDeleteFadeMs', DEFAULT_AUTO_DELETE_FADE_MS),
-			DEFAULT_AUTO_DELETE_FADE_MS
-		);
+		const delay = this.sanitizeDelay(configuration.autoDeleteDelayMs, DEFAULT_AUTO_DELETE_DELAY_MS);
+		const fadeDuration = this.sanitizeDelay(configuration.autoDeleteFadeMs, DEFAULT_AUTO_DELETE_FADE_MS);
 		const key = this.buildKey(scope, todoId);
 		this.cancel(scope, todoId);
 		const timer = setTimeout(async () => {

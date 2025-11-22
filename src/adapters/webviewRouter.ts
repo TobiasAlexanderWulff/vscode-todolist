@@ -8,6 +8,7 @@ import {
 	removeTodoWithUndo as removeTodoWithUndoService,
 } from '../services/todoOperations';
 import { Todo } from '../types';
+import { readConfig } from './config';
 
 interface MutationResult {
 	mutated: boolean;
@@ -145,7 +146,7 @@ async function handleWebviewToggle(
 	todo.updatedAt = new Date().toISOString();
 	await persistTodos(context.repository, target, todos);
 	if (todo.completed) {
-		context.autoDelete.schedule(context, target, todo.id);
+		context.autoDelete.schedule(context, target, todo.id, readConfig());
 	} else {
 		context.autoDelete.cancel(target, todo.id);
 	}
