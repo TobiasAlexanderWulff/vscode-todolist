@@ -15,10 +15,13 @@ import { normalizePositions, reorderTodosByOrder } from './domain/todo';
 import { ScopeTarget, TodoTarget } from './types/scope';
 import { AutoDeleteCoordinator } from './services/autoDeleteService';
 import { HandlerContext } from './types/handlerContext';
+import {
+	clearScope as clearScopeService,
+	removeTodoWithUndo as removeTodoWithUndoService,
+	removeTodoWithoutUndo as removeTodoWithoutUndoService,
+} from './services/todoOperations';
 
 type HandlerAutoDelete = AutoDeleteCoordinator<HandlerContext>;
-
-const UNDO_SNAPSHOT_TTL_MS = 10_000;
 
 /**
  * Activation entry point: initializes localization, repositories, webviews, and commands.
@@ -30,7 +33,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 	const webviewHost = new TodoWebviewHost(context);
 	const autoDelete = new AutoDeleteCoordinator<HandlerContext>({
 		removeTodo: (handlerContext, scope, todoId) =>
-			removeTodoWithoutUndo(handlerContext, scope, todoId),
+			removeTodoWithoutUndoService(
+				handlerContext,
+				scope,
+				todoId,
+				() => broadcastWebviewState(handlerContext.webviewHost, handlerContext.repository)
+			),
 		sendCue: (scope, todoId, durationMs) => {
 			webviewHost.postMessage(scopeToProviderMode(scope), {
 				type: 'autoDeleteCue',
@@ -154,7 +162,12 @@ async function removeTodo(context: HandlerContext): Promise<void> {
 	if (!scope) {
 		return;
 	}
-	await removeTodoWithUndo(context, scope, target.todoId);
+	await removeTodoWithUndoService(
+		context,
+		scope,
+		target.todoId,
+		() => broadcastWebviewState(context.webviewHost, context.repository)
+	);
 }
 
 /**
@@ -165,118 +178,16 @@ async function clearTodos(context: HandlerContext): Promise<void> {
 	if (!scope) {
 		return;
 	}
-	await clearScope(context, scope);
+	await clearScopeService(
+		context,
+		scope,
+		() => broadcastWebviewState(context.webviewHost, context.repository)
+	);
 }
 
 /**
  * Clears todos for a scope with confirmations and an undo grace period backed by snapshots.
  */
-async function clearScope(context: HandlerContext, scope: ScopeTarget): Promise<void> {
-	const todos = readTodos(context.repository, scope);
-	if (todos.length === 0) {
-		vscode.window.showInformationMessage(
-			l10n.t('command.clear.empty', describeScope(scope))
-		);
-		return;
-	}
-	context.autoDelete.cancelScope(scope, todos);
-	const confirmSetting = vscode.workspace
-		.getConfiguration('todo')
-		.get<boolean>('confirmDestructiveActions', true);
-	if (confirmSetting && todos.length > 1) {
-		const confirmAction = l10n.t('command.clear.confirmAction', 'Clear');
-		const title = l10n.t('command.clear.confirmTitle', describeScope(scope));
-		const selection = await vscode.window.showWarningMessage(
-			title,
-			{ modal: true },
-			confirmAction
-		);
-		if (selection !== confirmAction) {
-			return;
-		}
-	}
-	const scopeKey = context.repository.scopeKey(
-		scope.scope,
-		scope.scope === 'workspace' ? scope.workspaceFolder : undefined
-	);
-	context.repository.captureSnapshot(scopeKey, todos);
-	await persistTodos(context.repository, scope, []);
-	broadcastWebviewState(context.webviewHost, context.repository);
-	const undoAction = l10n.t('command.undo', 'Undo');
-	const clearedMessage = l10n.t('command.clear.success', describeScope(scope));
-	const undoSelection = await vscode.window.showInformationMessage(
-		clearedMessage,
-		undoAction
-	);
-	if (undoSelection === undoAction) {
-		const snapshot = context.repository.consumeSnapshot(scopeKey);
-		if (snapshot) {
-			await persistTodos(context.repository, scope, snapshot);
-			vscode.window.showInformationMessage(
-				l10n.t('command.undo.success', describeScope(scope))
-			);
-			broadcastWebviewState(context.webviewHost, context.repository);
-		}
-	} else {
-		// Expire snapshot after a short delay.
-		setTimeout(() => context.repository.consumeSnapshot(scopeKey), UNDO_SNAPSHOT_TTL_MS);
-	}
-}
-
-async function removeTodoWithUndo(
-	context: HandlerContext,
-	scope: ScopeTarget,
-	todoId: string
-): Promise<boolean> {
-	const todos = readTodos(context.repository, scope);
-	const todo = todos.find((item) => item.id === todoId);
-	if (!todo) {
-		return false;
-	}
-	context.autoDelete.cancel(scope, todoId);
-	const scopeKey = context.repository.scopeKey(
-		scope.scope,
-		scope.scope === 'workspace' ? scope.workspaceFolder : undefined
-	);
-	context.repository.captureSnapshot(scopeKey, todos);
-
-	const next = todos.filter((item) => item.id !== todoId);
-	await persistTodos(context.repository, scope, next);
-	broadcastWebviewState(context.webviewHost, context.repository);
-
-	const undoAction = l10n.t('command.undo', 'Undo');
-	const removedMessage = l10n.t('command.remove.success', todo.title, describeScope(scope));
-	const undoSelection = await vscode.window.showInformationMessage(removedMessage, undoAction);
-	if (undoSelection === undoAction) {
-		const snapshot = context.repository.consumeSnapshot(scopeKey);
-		if (snapshot) {
-			await persistTodos(context.repository, scope, snapshot);
-			vscode.window.showInformationMessage(
-				l10n.t('command.undo.todo.success', todo.title, describeScope(scope))
-			);
-			broadcastWebviewState(context.webviewHost, context.repository);
-		}
-	} else {
-		setTimeout(() => context.repository.consumeSnapshot(scopeKey), UNDO_SNAPSHOT_TTL_MS);
-	}
-	return true;
-}
-
-async function removeTodoWithoutUndo(
-	context: HandlerContext,
-	scope: ScopeTarget,
-	todoId: string
-): Promise<boolean> {
-	const todos = readTodos(context.repository, scope);
-	const next = todos.filter((item) => item.id !== todoId);
-	if (next.length === todos.length) {
-		return false;
-	}
-	await persistTodos(context.repository, scope, next);
-	broadcastWebviewState(context.webviewHost, context.repository);
-	return true;
-}
-
 async function resolveScopeTarget(): Promise<ScopeTarget | undefined> {
 	return promptForScope();
 }
@@ -364,23 +275,6 @@ async function persistTodos(
 	} else {
 		await repository.saveWorkspaceTodos(scope.workspaceFolder, normalized);
 	}
-}
-
-/**
- * Builds a localized, user-friendly label for a scope to reuse across UI prompts and toasts.
- */
-function describeScope(scope: ScopeTarget): string {
-	if (scope.scope === 'global') {
-		return l10n.t('scope.global.label', 'Global');
-	}
-	const folder = findWorkspaceFolder(scope.workspaceFolder);
-	return folder?.name ?? l10n.t('scope.workspace.unknown', 'Project');
-}
-
-function findWorkspaceFolder(key?: string): vscode.WorkspaceFolder | undefined {
-	return (vscode.workspace.workspaceFolders ?? []).find(
-		(folder) => folder.uri.toString() === key
-	);
 }
 
 function getWorkspaceFolderKey(folder: vscode.WorkspaceFolder): string {
@@ -485,7 +379,11 @@ export async function handleWebviewMessage(
 		if (!scope) {
 			return;
 		}
-		await clearScope(handlerContext, scope);
+		await clearScopeService(
+			handlerContext,
+			scope,
+			() => broadcastWebviewState(webviewHost, repository)
+		);
 		return;
 	}
 	const mutationResult = await handleWebviewMutation(message, handlerContext);
@@ -620,7 +518,12 @@ async function handleWebviewRemoveWithUndo(
 	if (!target) {
 		return { mutated: false };
 	}
-	const removed = await removeTodoWithUndo(context, target, todoId);
+	const removed = await removeTodoWithUndoService(
+		context,
+		target,
+		todoId,
+		() => broadcastWebviewState(context.webviewHost, context.repository)
+	);
 	return { mutated: removed, broadcastHandled: removed };
 }
 
