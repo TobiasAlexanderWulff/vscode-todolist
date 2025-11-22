@@ -2,9 +2,8 @@ import * as l10n from '@vscode/l10n';
 import * as vscode from 'vscode';
 
 import { TodoRepository } from './todoRepository';
-import { TodoWebviewHost, ProviderMode } from './todoWebviewHost';
+import { TodoWebviewHost } from './todoWebviewHost';
 import { buildWebviewStateSnapshot } from './webviewState';
-import { ScopeTarget } from './types/scope';
 import { AutoDeleteCoordinator } from './services/autoDeleteService';
 import { HandlerContext } from './types/handlerContext';
 import {
@@ -12,6 +11,7 @@ import {
 } from './services/todoOperations';
 import { handleWebviewMessage as routeWebviewMessage } from './adapters/webviewRouter';
 import { registerCommands } from './adapters/commandRouter';
+import { scopeTargetToWebviewScope, scopeToProviderMode } from './adapters/scopeMapping';
 
 /**
  * Activation entry point: initializes localization, repositories, webviews, and commands.
@@ -69,13 +69,3 @@ function broadcastWebviewState(host: TodoWebviewHost, repository: TodoRepository
 
 // legacy export used by tests; consider updating tests to import router directly
 export const handleWebviewMessage = routeWebviewMessage;
-
-function scopeTargetToWebviewScope(scope: ScopeTarget) {
-	return scope.scope === 'global'
-		? { scope: 'global' as const }
-		: { scope: 'workspace' as const, workspaceFolder: scope.workspaceFolder };
-}
-
-function scopeToProviderMode(scope: ScopeTarget): ProviderMode {
-	return scope.scope === 'global' ? 'global' : 'projects';
-}

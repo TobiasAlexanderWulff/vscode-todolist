@@ -11,7 +11,6 @@ import { Todo } from '../types';
 import { readConfig } from './config';
 import {
 	InboundMessage,
-	OutboundMessage,
 	WebviewMessageEvent,
 	WebviewScope,
 } from '../types/webviewMessages';
