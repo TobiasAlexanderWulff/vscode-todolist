@@ -108,6 +108,14 @@ main {
   border-radius: 4px;
   background: var(--vscode-editorWidget-background, rgba(255, 255, 255, 0.02));
   border: 1px solid transparent;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+.todo-item:hover {
+  background: var(--vscode-toolbar-hoverBackground, rgba(255, 255, 255, 0.05));
+  border-color: var(--vscode-focusBorder, rgba(255, 255, 255, 0.1));
 }
 
 .todo-item[draggable="true"] {
