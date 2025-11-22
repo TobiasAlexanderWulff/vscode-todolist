@@ -15,11 +15,13 @@ Guidance for anyone (human or automated) collaborating on this repository. Follo
 - Keep code lint-clean and formatted: run `npm run lint` (ESLint with `@typescript-eslint/recommended`) and match Prettier defaults (2 spaces, single quotes, 100-char width, semicolons).
 - Bundle with `esbuild` via the provided scripts (`npm run compile`, `npm run package`, `npm run watch`).
 - When introducing destructive actions, hook into the confirmation flow defined in the vision (settings-aware prompts, undo toasts, subtle TreeView animations).
+- Respect the layered architecture (`docs/ARCHITECTURE.md`): domain → services → adapters (commands, webview, config) → composition (`extension.ts`). VS Code API access belongs in adapters/composition only; settings are read via `src/adapters/config.ts`.
 
 ### 3. QA & Test Agent
 - Use `npm run test` (VS Code test harness) plus unit tests under `src/test` to cover repository logic, command behaviors, localization, and multi-root scenarios as described in the testing strategy.
 - Add focused tests for drag-and-drop ordering (ensuring `position` updates) and confirmation/undo flows by stubbing user interactions.
 - For regression verification, run `npm run compile` to ensure type checking + linting pass before executing the test suite.
+- Prefer adapter-level entry points in tests (`src/adapters/commandRouter.ts`, `src/adapters/webviewRouter.ts`) and shared helpers (`stubReadConfig`, `FakeWebviewHost`, `noopBroadcast`) to avoid touching `extension.ts`.
 
 ### 4. Documentation & Release Agent
 - Update `README.md`, `CHANGELOG.md`, and `docs/vision.md` when behavior or scope changes.
@@ -31,7 +33,7 @@ Guidance for anyone (human or automated) collaborating on this repository. Follo
 - Install dependencies: `npm install`.
 - Type-check only: `npm run check-types`.
 - Continuous development: `npm run watch` (esbuild + tsc) and `npm run watch-tests` when iterating on specs.
-- Testing order before PR or release: `npm run compile` → `npm run test`.
+- Testing order before PR or release: `npm run compile` → `npm run lint -- --max-warnings=0` (boundaries enforced) → `npm run test`.
 - Do not amend existing commits; add new commits instead unless the user explicitly instructs otherwise.
 - After finishing a task that changes the codebase, propose a suitable conventional commit message and commit the changes; do not push commits unless the user explicitly requests it.
 - When adding a whole new feature or fundamentally changing an existing one, consider creating a new branch for those changes.
