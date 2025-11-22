@@ -16,6 +16,7 @@ Both scopes should be visible side-by-side in the dedicated Activity Bar view (r
 - Add, edit, complete, remove, and bulk-clear todos within either scope via commands (`todo.addTodo`, `todo.editTodo`, `todo.completeTodo`, `todo.removeTodo`, `todo.clearTodos`).
 - Provide inline creation/editing within the Activity Bar views: clicking the view-title add button or invoking the command inserts a placeholder row directly into the list, focused for immediate typing (no modal input boxes). Pressing Enter commits the change; Escape cancels.
 - Provide drag-and-drop reordering inside each scope; default ordering falls back to the creation ID when no manual ordering is set. Persist ordering by storing a `position` field per todo that updates whenever an item is dragged.
+- Offer optional auto-delete of completed todos, governed by settings (`todo.autoDeleteCompleted`, `todo.autoDeleteDelayMs`, `todo.autoDeleteFadeMs`) and surfaced with a brief fade-out cue before removal; cancelling completion cancels the deletion timer.
 - Persist todos automatically using the storage that VS Code exposes through `ExtensionContext` (`globalState` for profile data, `workspaceState` for project data). Each todo carries a hidden ID and completion state.
 - Offer custom Webview-based Explorer views pinned in the Activity Bar, displaying two collapsible parents (“Global” and “Projects”). For multi-root workspaces, show a collapsible todo section per workspace folder under “Projects” and merge the global section once.
 - Keep the WebviewViews in sync with storage so changes are reflected immediately when switching workspaces or profiles mid-session.
@@ -27,6 +28,7 @@ Both scopes should be visible side-by-side in the dedicated Activity Bar view (r
 - **Keep context visible** — it should be obvious whether an item lives in the global list or the project list.
 - **Profile aware** — switching VS Code profiles should automatically switch the global todo set with no additional work.
 - **Respect language preferences** — provide English and German localizations, with graceful fallback behavior.
+- **Visible feedback** — destructive actions and auto-delete operations show inline cues (fade-out, status toasts) so users understand what happened and how to undo when available.
 
 ## Rough Implementation Direction
 1. Scaffold the project with `yo code` (TypeScript template).
