@@ -5,7 +5,7 @@ This extension is organized into layered modules to keep business rules reusable
 ## Layers
 - **Domain** (`src/domain`): Pure helpers and types for todos (ordering, normalization, shared message contracts). No VS Code API usage.
 - **Services** (`src/services`): Stateful utilities that implement behaviors over the domain (repository, undo snapshots, auto-delete scheduling, scope helpers). May use VS Code types but avoid UI calls.
-- **Adapters** (`src/adapters`): Boundaries to VS Code APIs — command handlers, webview hosts/routers, configuration, and state broadcasting.
+- **Adapters** (`src/adapters`): Boundaries to VS Code APIs — command handlers/router, webview host/router, configuration, and state broadcasting.
 - **Webview runtime** (`src/webview`): Client-side code running inside the webviews; communicates via typed messages shared with the extension host.
 - **Composition** (`src/extension.ts`): Activation entry that wires localization, services, adapters, and disposables.
 
