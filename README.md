@@ -46,4 +46,9 @@ npm run watch         # incremental build while coding
 npm run test          # VS Code extension tests
 ```
 
+Architecture highlights:
+- Layered modules with boundary linting: domain helpers, services, adapters (commands/webview/config), and a thin `extension.ts` for composition.
+- Webview and command routers live under `src/adapters/`; settings are read via `src/adapters/config.ts` and injected into behaviors (e.g., auto-delete).
+- Tests import adapters directly and stub config via `src/test/testUtils` when needed.
+
 See `docs/vision.md` for the product principles and `docs/implementation-plan.md` for the roadmap.

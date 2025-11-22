@@ -21,3 +21,5 @@ This extension is organized into layered modules to keep business rules reusable
 - Unit-test Domain helpers and Services without VS Code mocks where possible.
 - Route webview messages through the adapter/router in tests to verify validation and ordering/undo behaviors.
 - Keep integration tests focused on command surfaces, multi-root behavior, localization, confirmation/undo, and auto-delete cues.
+- For config-sensitive tests, stub the adapter (`stubReadConfig` in `src/test/testUtils`) instead of mutating VS Code configuration.
+- Fake webview hosts used in tests can capture `postMessage`/`broadcast` traffic without real VS Code webviews.
