@@ -20,6 +20,7 @@ import {
 	removeTodoWithoutUndo as removeTodoWithoutUndoService,
 } from './services/todoOperations';
 import { handleWebviewMessage as routeWebviewMessage } from './adapters/webviewRouter';
+import { registerCommands } from './adapters/commandRouter';
 import { normalizePositions } from './domain/todo';
 
 type HandlerAutoDelete = AutoDeleteCoordinator<HandlerContext>;
@@ -58,9 +59,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
 	registerCommands({
 		context,
-		repository,
-		webviewHost,
-		autoDelete,
+		handlerContext,
+		broadcastState: () => broadcastWebviewState(webviewHost, repository),
 	});
 	broadcastWebviewState(webviewHost, repository);
 
@@ -81,17 +81,6 @@ interface CommandContext {
 /**
  * Registers all extension commands so they can be invoked via palette, keybindings, or UI buttons.
  */
-function registerCommands({ context, repository, webviewHost, autoDelete }: CommandContext): void {
-	const handlerContext: HandlerContext = { repository, webviewHost, autoDelete };
-	context.subscriptions.push(
-		vscode.commands.registerCommand('todo.addTodo', () => addTodo(handlerContext)),
-		vscode.commands.registerCommand('todo.editTodo', () => editTodo(handlerContext)),
-		vscode.commands.registerCommand('todo.completeTodo', () => toggleTodoCompletion(handlerContext)),
-		vscode.commands.registerCommand('todo.removeTodo', () => removeTodo(handlerContext)),
-		vscode.commands.registerCommand('todo.clearTodos', () => clearTodos(handlerContext))
-	);
-}
-
 /**
  * Focuses the TODO container and triggers inline creation in the webview for a chosen scope.
  */
