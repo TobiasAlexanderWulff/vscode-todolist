@@ -2,7 +2,7 @@
 
 Lightweight todos that live where you work: keep personal tasks alongside project tasks in one Activity Bar home.
 
-![Version](https://img.shields.io/badge/version-0.2.1-blue?label=Version) ![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey)
+[![VS Code Marketplace](https://vsmarketplacebadges.dev/version-short/TobiasWulff.vscode-todolist.png)](https://marketplace.visualstudio.com/items?itemName=TobiasWulff.vscode-todolist) [![GitHub License](https://img.shields.io/github/license/tobiasalexanderwulff/vscode-todolist.png)](https://github.com/tobiasalexanderwulff/vscode-todolist/blob/main/LICENSE)
 
 ## Two scopes, one view
 - **Global (profile-bound):** follow your VS Code profile everywhere.
