@@ -1,7 +1,7 @@
 /** Tests the webview state snapshot builder and localization. */
 
 import * as assert from 'assert';
-import { afterEach } from 'mocha';
+import { afterEach, beforeEach } from 'mocha';
 import * as vscode from 'vscode';
 import * as l10n from '@vscode/l10n';
 
@@ -21,7 +21,15 @@ function createRepositoryHarness() {
 }
 
 suite('buildWebviewStateSnapshot', () => {
+	let originalMathRandom: () => number;
+
+	beforeEach(() => {
+		originalMathRandom = Math.random;
+		Math.random = () => 0;
+	});
+
 	afterEach(() => {
+		Math.random = originalMathRandom;
 		restoreWorkspaceFoldersDescriptor();
 	});
 
@@ -94,6 +102,7 @@ suite('buildWebviewStateSnapshot', () => {
 			key: folderA.toString(),
 			label: 'Workspace A',
 			description: folderA.fsPath,
+			emptyLabel: l10n.t('webview.projects.empty', 'No project TODOs yet'),
 			todos: [],
 		});
 		assert.strictEqual(secondFolder.key, folderB.toString());
@@ -102,6 +111,32 @@ suite('buildWebviewStateSnapshot', () => {
 		assert.deepStrictEqual(
 			secondFolder.todos.map((todo) => ({ title: todo.title, scope: todo.scope })),
 			[{ title: 'Scoped to B', scope: 'workspace' }]
+		);
+	});
+
+	test('uses empty-state context hints per scope', async () => {
+		const { repository } = createRepositoryHarness();
+		const folder = vscode.Uri.parse('file:///context');
+		overrideWorkspaceFolders([{ uri: folder, name: 'Context Workspace', index: 0 }]);
+
+		const snapshot = buildWebviewStateSnapshot(repository, {
+			global: 'onInit',
+			workspaces: { [folder.toString()]: 'afterCompletion' },
+		});
+
+		assert.strictEqual(
+			snapshot.global.emptyLabel,
+			l10n.t(
+				'webview.global.emptyMessages.onInit.follow',
+				'No global todos. Add something that follows you everywhere.'
+			)
+		);
+		assert.strictEqual(
+			snapshot.projects.folders[0]?.emptyLabel,
+			l10n.t(
+				'webview.projects.emptyMessages.afterCompletion.ship',
+				'All project todos done. Celebrate and ship!'
+			)
 		);
 	});
 });

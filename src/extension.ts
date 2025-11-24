@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 
 import { TodoRepository } from './todoRepository';
 import { TodoWebviewHost } from './todoWebviewHost';
-import { buildWebviewStateSnapshot } from './webviewState';
+import { buildWebviewStateSnapshot, EmptyStateHints, EmptyStateKind } from './webviewState';
 import { AutoDeleteCoordinator } from './services/autoDeleteService';
 import { HandlerContext } from './types/handlerContext';
 import {
@@ -12,6 +12,7 @@ import {
 import { handleWebviewMessage as routeWebviewMessage } from './adapters/webviewRouter';
 import { registerCommands } from './adapters/commandRouter';
 import { scopeTargetToWebviewScope, scopeToProviderMode } from './adapters/scopeMapping';
+import { ScopeTarget } from './types/scope';
 
 /**
  * Activation entry point: initializes localization, repositories, webviews, and commands.
@@ -29,7 +30,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 				handlerContext,
 				scope,
 				todoId,
-				() => broadcastWebviewState(handlerContext.webviewHost, handlerContext.repository)
+				() =>
+					broadcastWebviewState(
+						handlerContext.webviewHost,
+						handlerContext.repository,
+						buildScopeHint(scope, 'afterCompletion')
+					)
 			),
 		sendCue: (scope, todoId, durationMs) => {
 			const webviewScope = scopeTargetToWebviewScope(scope);
@@ -55,7 +61,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 		handlerContext,
 		broadcastState: () => broadcastWebviewState(webviewHost, repository),
 	});
-	broadcastWebviewState(webviewHost, repository);
+	broadcastWebviewState(webviewHost, repository, buildInitEmptyStateHints());
 
 	console.log(l10n.t('extension.activatedLog', 'vscode-todolist extension activated.'));
 }
@@ -71,9 +77,28 @@ export function deactivate(): void {
  * @param host - Webview host that manages both providers.
  * @param repository - Todo repository to read data from.
  */
-function broadcastWebviewState(host: TodoWebviewHost, repository: TodoRepository): void {
-	const snapshot = buildWebviewStateSnapshot(repository);
+function broadcastWebviewState(
+	host: TodoWebviewHost,
+	repository: TodoRepository,
+	emptyStateHints: EmptyStateHints = {}
+): void {
+	const snapshot = buildWebviewStateSnapshot(repository, emptyStateHints);
 	host.broadcast({ type: 'stateUpdate', payload: snapshot });
+}
+
+function buildInitEmptyStateHints(): EmptyStateHints {
+	const workspaces: Record<string, EmptyStateKind> = {};
+	(vscode.workspace.workspaceFolders ?? []).forEach((folder) => {
+		workspaces[folder.uri.toString()] = 'onInit';
+	});
+	return { global: 'onInit', workspaces };
+}
+
+function buildScopeHint(scope: ScopeTarget, kind: EmptyStateKind): EmptyStateHints {
+	if (scope.scope === 'global') {
+		return { global: kind };
+	}
+	return { workspaces: { [scope.workspaceFolder]: kind } };
 }
 
 /** Legacy export used by tests; prefer importing the router directly instead. */

@@ -50,6 +50,7 @@ interface WebviewWorkspaceState {
 	key: string;
 	label: string;
 	description?: string;
+	emptyLabel: string;
 	todos: WebviewTodoState[];
 }
 
@@ -378,7 +379,7 @@ function renderProjectsSection(projects: WebviewProjectsState): HTMLElement {
 		if (folder.todos.length === 0 && !inlineState.creating) {
 			const empty = document.createElement('p');
 			empty.className = 'empty-state';
-			empty.textContent = snapshot?.projects.emptyLabel ?? '';
+			empty.textContent = folder.emptyLabel;
 			list.appendChild(empty);
 		}
 
