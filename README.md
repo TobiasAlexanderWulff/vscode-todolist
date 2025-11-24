@@ -51,4 +51,4 @@ Architecture highlights:
 - Webview and command routers live under `src/adapters/`; settings are read via `src/adapters/config.ts` and injected into behaviors (e.g., auto-delete).
 - Tests import adapters directly and stub config via `src/test/testUtils` when needed.
 
-See `docs/vision.md` for the product principles and `docs/implementation-plan.md` for the roadmap.
+See `docs/vision.md` for the product principles, `docs/ROADMAP.md` for planned releases, and `docs/implementation-plan.md` for build tasks.

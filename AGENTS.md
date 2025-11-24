@@ -25,6 +25,7 @@ Guidance for anyone (human or automated) collaborating on this repository. Follo
 
 ### 4. Documentation & Release Agent
 - Update `README.md`, `CHANGELOG.md`, and `docs/vision.md` when behavior or scope changes.
+- Keep `docs/ROADMAP.md` current and aligned with the vision; ensure README/links point to it.
 - Provide screenshots or animations for the TreeView when features stabilize.
 - Keep `.vscode/` and `.vscodeignore` aligned with the development workflow (launch configs, tasks, packaging ignore rules).
 - Prepare marketplace releases by running `npm run package` and documenting notable changes in the changelog.
