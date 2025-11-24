@@ -5,9 +5,9 @@ Planned releases aligned with the dual-scope vision in `docs/vision.md`. Updates
 ## Near-term
 
 ### 0.3.0 — polish
-- Clearer completion affordance/feedback in the webview (no command changes).
-- Clarify the Activity Bar entry in README and add screenshots/GIFs.
-- Add marketplace categories for discoverability.
+- Clearer completion affordance/feedback in the webview plus scoped empty states (Global vs. each project), localized EN/DE with playful variants.
+- Auto-delete options for completed todos (delay/fade) surfaced in settings and reflected in UI cues.
+- Clarify the Activity Bar entry in README, add screenshots/GIFs, and include marketplace keywords/categories.
 
 ### 0.4.0 — workflow enhancers
 - Move todos between Global and Project scopes via command/inline action.
