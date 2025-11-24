@@ -187,7 +187,6 @@
       return container;
     }
     projects.folders.forEach((folder) => {
-      var _a2;
       const scope = { scope: "workspace", workspaceFolder: folder.key };
       const inlineState = getInlineState(scope);
       const workspaceWrapper = document.createElement("div");
@@ -211,7 +210,7 @@
       if (folder.todos.length === 0 && !inlineState.creating) {
         const empty = document.createElement("p");
         empty.className = "empty-state";
-        empty.textContent = (_a2 = snapshot == null ? void 0 : snapshot.projects.emptyLabel) != null ? _a2 : "";
+        empty.textContent = folder.emptyLabel;
         list.appendChild(empty);
       }
       attachDragHandlers(list, scope, inlineState);

@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+
 import { HandlerContext } from '../types/handlerContext';
 import { ScopeTarget } from '../types/scope';
 import { TodoRepository } from '../todoRepository';
@@ -14,6 +16,7 @@ import {
 	WebviewMessageEvent,
 	WebviewScope,
 } from '../types/webviewMessages';
+import type { EmptyStateHints } from '../webviewState';
 
 /** Result of processing a webview mutation message. */
 interface MutationResult {
@@ -35,7 +38,7 @@ export async function handleWebviewMessage(
 	const { repository, webviewHost } = context;
 	const handlerContext: HandlerContext = context;
 	if (message.type === 'webviewReady') {
-		broadcastWebviewState(webviewHost, repository);
+		broadcastWebviewState(webviewHost, repository, buildInitEmptyStateHints());
 		return;
 	}
 	if (message.type === 'clearScope') {
@@ -249,11 +252,25 @@ async function handleWebviewReorder(
  * @param host - Webview host responsible for dispatch.
  * @param repository - Repository supplying the state snapshot.
  */
-function broadcastWebviewState(host: TodoWebviewHost, repository: TodoRepository): void {
+function broadcastWebviewState(
+	host: TodoWebviewHost,
+	repository: TodoRepository,
+	emptyStateHints: EmptyStateHints = {}
+): void {
 	// Lazy import to avoid circular dep on extension.ts
-	const { buildWebviewStateSnapshot } = require('../webviewState') as typeof import('../webviewState');
-	const snapshot = buildWebviewStateSnapshot(repository);
+	const webviewStateModule = require('../webviewState') as typeof import('../webviewState');
+	const snapshot = webviewStateModule.buildWebviewStateSnapshot(repository, emptyStateHints);
 	host.broadcast({ type: 'stateUpdate', payload: snapshot });
+}
+
+function buildInitEmptyStateHints(): EmptyStateHints {
+	const workspaces: EmptyStateHints['workspaces'] = {};
+	(vscode.workspace.workspaceFolders ?? []).forEach((folder) => {
+		if (workspaces) {
+			workspaces[folder.uri.toString()] = 'onInit';
+		}
+	});
+	return { global: 'onInit', workspaces };
 }
 
 /**
@@ -289,6 +306,10 @@ function readTodos(repository: TodoRepository, scope: ScopeTarget): Todo[] {
  * @param scope - Scope target describing global or workspace storage.
  * @param todos - Todos to persist.
  */
-async function persistTodos(repository: TodoRepository, scope: ScopeTarget, todos: Todo[]): Promise<void> {
+async function persistTodos(
+	repository: TodoRepository,
+	scope: ScopeTarget,
+	todos: Todo[]
+): Promise<void> {
 	await repository.persistTodos(scope, todos);
 }
