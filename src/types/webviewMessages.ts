@@ -36,6 +36,8 @@ export type CommitEditMessage = {
 };
 /** Message toggling completion state of a todo. */
 export type ToggleCompleteMessage = { type: 'toggleComplete'; scope: WebviewScope; todoId: string };
+/** Message requesting a todo title be copied to the clipboard. */
+export type CopyTodoMessage = { type: 'copyTodo'; scope: WebviewScope; todoId: string };
 /** Message requesting a todo be removed from a scope. */
 export type RemoveTodoMessage = { type: 'removeTodo'; scope: WebviewScope; todoId: string };
 /** Message communicating a drag-and-drop reordering. */
@@ -49,6 +51,7 @@ export type InboundMessage =
 	| CommitCreateMessage
 	| CommitEditMessage
 	| ToggleCompleteMessage
+	| CopyTodoMessage
 	| RemoveTodoMessage
 	| ReorderTodosMessage
 	| ClearScopeMessage;

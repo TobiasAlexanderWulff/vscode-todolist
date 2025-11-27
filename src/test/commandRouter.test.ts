@@ -42,6 +42,7 @@ suite('Command handlers', () => {
 	const originalShowWarningMessage = vscode.window.showWarningMessage;
 	const originalShowInformationMessage = vscode.window.showInformationMessage;
 	const originalGetConfiguration = vscode.workspace.getConfiguration;
+	const originalClipboardWriteText = vscode.env.clipboard.writeText;
 	const activeAutoDeleteCoordinators: AutoDeleteCoordinator<HandlerContext>[] = [];
 	let restoreReadConfig: (() => void) | undefined;
 
@@ -109,6 +110,11 @@ suite('Command handlers', () => {
 			originalShowInformationMessage;
 		(vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration =
 			originalGetConfiguration;
+		(
+			vscode.env as unknown as {
+				clipboard: { writeText: typeof vscode.env.clipboard.writeText };
+			}
+		).clipboard.writeText = originalClipboardWriteText;
 		restoreReadConfig?.();
 		restoreReadConfig = undefined;
 		activeAutoDeleteCoordinators.forEach((instance) => instance.dispose());
@@ -318,6 +324,37 @@ suite('Command handlers', () => {
 				(message) => (message as { type: string }).type === 'stateUpdate'
 			)
 		);
+	});
+
+	test('copies a todo title via webview message', async () => {
+		const { repository } = createRepositoryHarness();
+		const todo = repository.createTodo({ title: 'Copy me', scope: 'global' });
+		await repository.saveGlobalTodos([todo]);
+
+		const host = new FakeWebviewHost();
+		const autoDelete = createAutoDelete(host);
+		let copied: string | undefined;
+		const writeTextStub: typeof vscode.env.clipboard.writeText = async (value: string) => {
+			copied = value;
+		};
+		(
+			vscode.env as unknown as {
+				clipboard: { writeText: typeof vscode.env.clipboard.writeText };
+			}
+		).clipboard.writeText = writeTextStub;
+
+		const message: InboundMessage = {
+			type: 'copyTodo',
+			scope: { scope: 'global' },
+			todoId: todo.id,
+		};
+		await handleWebviewMessage(
+			{ mode: 'global', message },
+			toHandlerContext(repository, host, autoDelete)
+		);
+
+		assert.strictEqual(copied, 'Copy me');
+		assert.strictEqual(host.broadcastMessages.length, 0);
 	});
 
 	test('clears and restores workspace todos via undo from webview', async () => {

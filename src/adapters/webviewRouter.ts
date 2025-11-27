@@ -89,6 +89,9 @@ async function handleWebviewMutation(
 			return {
 				mutated: await handleWebviewToggle(context, message.scope, message.todoId),
 			};
+		case 'copyTodo':
+			await handleWebviewCopy(context.repository, message.scope, message.todoId);
+			return { mutated: false, broadcastHandled: true };
 		case 'removeTodo':
 			return handleWebviewRemoveWithUndo(context, message.scope, message.todoId);
 		case 'reorderTodos':
@@ -190,6 +193,23 @@ async function handleWebviewToggle(
 		context.autoDelete.cancel(target, todo.id);
 	}
 	return true;
+}
+
+async function handleWebviewCopy(
+	repository: TodoRepository,
+	scope: WebviewScope,
+	todoId: string
+): Promise<void> {
+	const target = scopeFromWebviewScope(scope);
+	if (!target) {
+		return;
+	}
+	const todos = readTodos(repository, target);
+	const todo = todos.find((item) => item.id === todoId);
+	if (!todo) {
+		return;
+	}
+	await vscode.env.clipboard.writeText(todo.title);
 }
 
 /**

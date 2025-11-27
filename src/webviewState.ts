@@ -52,6 +52,7 @@ export interface WebviewStrings {
 	addPlaceholder: string;
 	inlineCreateHint: string;
 	completeLabel: string;
+	copyLabel: string;
 	removeLabel: string;
 	addLabel: string;
 	clearLabel: string;
@@ -123,6 +124,7 @@ export function buildWebviewStateSnapshot(
 				'Type and press Enter to save, Esc to cancel.'
 			),
 			completeLabel: l10n.t('command.todo.completeTodo.title', 'Complete TODO'),
+			copyLabel: l10n.t('webview.todo.copy', 'Copy to clipboard'),
 			removeLabel: l10n.t('command.todo.removeTodo.title', 'Remove TODO'),
 			addLabel: l10n.t('webview.section.add', 'Add'),
 			clearLabel: l10n.t('webview.section.clear', 'Clear'),

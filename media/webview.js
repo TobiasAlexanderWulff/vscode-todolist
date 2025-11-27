@@ -267,7 +267,7 @@
     return row;
   }
   function renderTodoRow(scope, todo, inlineState) {
-    var _a2, _b;
+    var _a2, _b, _c;
     const row = document.createElement("div");
     row.className = "todo-item";
     row.dataset.todoId = todo.id;
@@ -322,6 +322,19 @@
     }
     const actions = document.createElement("div");
     actions.className = "todo-actions";
+    const copyButton = document.createElement("button");
+    copyButton.className = "todo-action";
+    copyButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="8" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="2" width="8" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>';
+    copyButton.title = (_b = snapshot == null ? void 0 : snapshot.strings.copyLabel) != null ? _b : "Copy";
+    copyButton.addEventListener(
+      "click",
+      () => postMessage({
+        type: "copyTodo",
+        scope,
+        todoId: todo.id
+      })
+    );
+    actions.appendChild(copyButton);
     const editButton = document.createElement("button");
     editButton.className = "todo-action";
     editButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path transform="translate(0, 2)" d="M12.5 3.5L10 1L3 8V10.5H5.5L12.5 3.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -331,7 +344,7 @@
     const removeButton = document.createElement("button");
     removeButton.className = "todo-action";
     removeButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
-    removeButton.title = (_b = snapshot == null ? void 0 : snapshot.strings.removeLabel) != null ? _b : "Remove";
+    removeButton.title = (_c = snapshot == null ? void 0 : snapshot.strings.removeLabel) != null ? _c : "Remove";
     removeButton.addEventListener("click", () => postMessage({
       type: "removeTodo",
       scope,

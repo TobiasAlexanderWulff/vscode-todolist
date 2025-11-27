@@ -17,6 +17,7 @@ type ExtensionMessage =
 	| { type: 'commitCreate'; scope: WebviewScope; title: string }
 	| { type: 'commitEdit'; scope: WebviewScope; todoId: string; title: string }
 	| { type: 'toggleComplete'; scope: WebviewScope; todoId: string }
+	| { type: 'copyTodo'; scope: WebviewScope; todoId: string }
 	| { type: 'removeTodo'; scope: WebviewScope; todoId: string }
 	| { type: 'reorderTodos'; scope: WebviewScope; order: string[] }
 	| { type: 'clearScope'; scope: WebviewScope };
@@ -69,6 +70,7 @@ interface WebviewStrings {
 	addPlaceholder: string;
 	inlineCreateHint: string;
 	completeLabel: string;
+	copyLabel: string;
 	removeLabel: string;
 	addLabel: string;
 	clearLabel: string;
@@ -513,11 +515,25 @@ function renderTodoRow(scope: WebviewScope, todo: WebviewTodoState, inlineState:
 		title.className = `todo-title${todo.completed ? ' completed' : ''}`;
 		title.textContent = todo.title;
 		title.addEventListener('dblclick', () => startInlineEdit(scope, todo.id));
-		row.appendChild(title);
+	row.appendChild(title);
 	}
 
 	const actions = document.createElement('div');
 	actions.className = 'todo-actions';
+
+	const copyButton = document.createElement('button');
+	copyButton.className = 'todo-action';
+	copyButton.innerHTML =
+		'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="8" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="2" width="8" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>';
+	copyButton.title = snapshot?.strings.copyLabel ?? 'Copy';
+	copyButton.addEventListener('click', () =>
+		postMessage({
+			type: 'copyTodo',
+			scope,
+			todoId: todo.id,
+		}),
+	);
+	actions.appendChild(copyButton);
 
 	const editButton = document.createElement('button');
 	editButton.className = 'todo-action';
