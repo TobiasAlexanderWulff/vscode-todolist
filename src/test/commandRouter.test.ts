@@ -41,8 +41,8 @@ suite('Command handlers', () => {
 	const originalExecuteCommand = vscode.commands.executeCommand;
 	const originalShowWarningMessage = vscode.window.showWarningMessage;
 	const originalShowInformationMessage = vscode.window.showInformationMessage;
-	const originalSetStatusBarMessage = vscode.window.setStatusBarMessage;
 	const originalGetConfiguration = vscode.workspace.getConfiguration;
+	const originalSetTimeout = setTimeout;
 	const activeAutoDeleteCoordinators: AutoDeleteCoordinator<HandlerContext>[] = [];
 	let restoreReadConfig: (() => void) | undefined;
 
@@ -114,11 +114,11 @@ suite('Command handlers', () => {
 			originalShowWarningMessage;
 		(vscode.window as unknown as { showInformationMessage: typeof vscode.window.showInformationMessage }).showInformationMessage =
 			originalShowInformationMessage;
-		(
-			vscode.window as unknown as { setStatusBarMessage: typeof vscode.window.setStatusBarMessage }
-		).setStatusBarMessage = originalSetStatusBarMessage;
+		(vscode.commands as unknown as { executeCommand: typeof vscode.commands.executeCommand }).executeCommand =
+			originalExecuteCommand;
 		(vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration =
 			originalGetConfiguration;
+		(global as unknown as { setTimeout: typeof setTimeout }).setTimeout = originalSetTimeout;
 		restoreReadConfig?.();
 		restoreReadConfig = undefined;
 		activeAutoDeleteCoordinators.forEach((instance) => instance.dispose());
@@ -338,19 +338,31 @@ suite('Command handlers', () => {
 		const host = new FakeWebviewHost();
 		const autoDelete = createAutoDelete(host);
 		let copied: string | undefined;
-		let statusMessage: any[] | undefined;
+		let infoMessage: any[] | undefined;
+		const executedCommands: string[] = [];
+		const scheduledTimeouts: Array<() => void> = [];
 		const writeTextStub: HandlerContext['clipboardWriteText'] = async (value: string) => {
 			copied = value;
 		};
-		const setStatusBarMessageStub: typeof vscode.window.setStatusBarMessage = (...args: any[]) => {
-			statusMessage = args;
-			return {} as vscode.Disposable;
+		const showInformationMessageStub: typeof vscode.window.showInformationMessage = async (
+			...args: any[]
+		) => {
+			infoMessage = args;
+			return undefined as unknown as never;
 		};
-		(
-			vscode.window as unknown as {
-				setStatusBarMessage: typeof vscode.window.setStatusBarMessage;
-			}
-		).setStatusBarMessage = setStatusBarMessageStub;
+		const executeCommandStub: typeof vscode.commands.executeCommand = async (command: string) => {
+			executedCommands.push(command);
+			return undefined as unknown as never;
+		};
+		const setTimeoutStub = ((callback: (...args: any[]) => void) => {
+			scheduledTimeouts.push(callback);
+			return 0 as unknown as ReturnType<typeof setTimeout>;
+		}) as unknown as typeof setTimeout;
+		(vscode.window as unknown as { showInformationMessage: typeof vscode.window.showInformationMessage }).showInformationMessage =
+			showInformationMessageStub;
+		(vscode.commands as unknown as { executeCommand: typeof vscode.commands.executeCommand }).executeCommand =
+			executeCommandStub;
+		(global as unknown as { setTimeout: typeof setTimeout }).setTimeout = setTimeoutStub;
 
 		const message: InboundMessage = {
 			type: 'copyTodo',
@@ -364,13 +376,12 @@ suite('Command handlers', () => {
 				webviewHost: host as unknown as TodoWebviewHost,
 			})
 		);
+		scheduledTimeouts.forEach((fn) => fn());
 
 		assert.strictEqual(copied, 'Copy me');
-		const statusText = statusMessage?.[0];
-		assert.ok(
-			statusText === 'Copied to clipboard' || statusText === 'webview.todo.copy.success'
-		);
-		assert.strictEqual(statusMessage?.[1], 2000);
+		const statusText = infoMessage?.[0];
+		assert.ok(statusText === 'Copied to clipboard' || statusText === 'webview.todo.copy.success');
+		assert.ok(executedCommands.includes('workbench.action.closeMessages'));
 		assert.strictEqual(host.broadcastMessages.length, 0);
 	});
 
