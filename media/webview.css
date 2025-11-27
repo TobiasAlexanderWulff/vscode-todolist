@@ -208,7 +208,7 @@ main {
 }
 
 .todo-action.copied {
-  color: var(--vscode-testing-iconPassed, var(--vscode-textLink-foreground, currentColor));
+  color: rgb(0, 120, 215);
   transform: scale(1.06);
 }
 
