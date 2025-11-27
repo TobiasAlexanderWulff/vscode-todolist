@@ -90,7 +90,7 @@ async function handleWebviewMutation(
 				mutated: await handleWebviewToggle(context, message.scope, message.todoId),
 			};
 		case 'copyTodo':
-			await handleWebviewCopy(context.repository, message.scope, message.todoId);
+			await handleWebviewCopy(context, message.scope, message.todoId);
 			return { mutated: false, broadcastHandled: true };
 		case 'removeTodo':
 			return handleWebviewRemoveWithUndo(context, message.scope, message.todoId);
@@ -196,7 +196,7 @@ async function handleWebviewToggle(
 }
 
 async function handleWebviewCopy(
-	repository: TodoRepository,
+	context: HandlerContext,
 	scope: WebviewScope,
 	todoId: string
 ): Promise<void> {
@@ -204,12 +204,13 @@ async function handleWebviewCopy(
 	if (!target) {
 		return;
 	}
-	const todos = readTodos(repository, target);
+	const todos = readTodos(context.repository, target);
 	const todo = todos.find((item) => item.id === todoId);
 	if (!todo) {
 		return;
 	}
-	await vscode.env.clipboard.writeText(todo.title);
+	const writeText = context.clipboardWriteText ?? vscode.env.clipboard.writeText;
+	await writeText(todo.title);
 }
 
 /**

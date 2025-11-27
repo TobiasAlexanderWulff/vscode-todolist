@@ -42,7 +42,6 @@ suite('Command handlers', () => {
 	const originalShowWarningMessage = vscode.window.showWarningMessage;
 	const originalShowInformationMessage = vscode.window.showInformationMessage;
 	const originalGetConfiguration = vscode.workspace.getConfiguration;
-	const originalClipboardWriteText = vscode.env.clipboard.writeText;
 	const activeAutoDeleteCoordinators: AutoDeleteCoordinator<HandlerContext>[] = [];
 	let restoreReadConfig: (() => void) | undefined;
 
@@ -69,9 +68,15 @@ suite('Command handlers', () => {
 	function toHandlerContext(
 		repository: TodoRepository,
 		webviewHost: Pick<TodoWebviewHost, 'postMessage' | 'broadcast'>,
-		autoDelete: AutoDeleteCoordinator<HandlerContext>
+		autoDelete: AutoDeleteCoordinator<HandlerContext>,
+		overrides?: Partial<HandlerContext>
 	): HandlerContext {
-		return { repository, webviewHost: webviewHost as TodoWebviewHost, autoDelete };
+		return {
+			repository,
+			webviewHost: webviewHost as TodoWebviewHost,
+			autoDelete,
+			...overrides,
+		};
 	}
 
 	async function removeTodoWithoutUndo(
@@ -110,11 +115,6 @@ suite('Command handlers', () => {
 			originalShowInformationMessage;
 		(vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration =
 			originalGetConfiguration;
-		(
-			vscode.env as unknown as {
-				clipboard: { writeText: typeof vscode.env.clipboard.writeText };
-			}
-		).clipboard.writeText = originalClipboardWriteText;
 		restoreReadConfig?.();
 		restoreReadConfig = undefined;
 		activeAutoDeleteCoordinators.forEach((instance) => instance.dispose());
@@ -334,14 +334,9 @@ suite('Command handlers', () => {
 		const host = new FakeWebviewHost();
 		const autoDelete = createAutoDelete(host);
 		let copied: string | undefined;
-		const writeTextStub: typeof vscode.env.clipboard.writeText = async (value: string) => {
+		const writeTextStub: HandlerContext['clipboardWriteText'] = async (value: string) => {
 			copied = value;
 		};
-		(
-			vscode.env as unknown as {
-				clipboard: { writeText: typeof vscode.env.clipboard.writeText };
-			}
-		).clipboard.writeText = writeTextStub;
 
 		const message: InboundMessage = {
 			type: 'copyTodo',
@@ -350,7 +345,7 @@ suite('Command handlers', () => {
 		};
 		await handleWebviewMessage(
 			{ mode: 'global', message },
-			toHandlerContext(repository, host, autoDelete)
+			toHandlerContext(repository, host, autoDelete, { clipboardWriteText: writeTextStub })
 		);
 
 		assert.strictEqual(copied, 'Copy me');
