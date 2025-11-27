@@ -336,6 +336,12 @@
       copyButton.innerHTML = originalCopyIcon;
       copyButton.classList.remove("copied");
     };
+    const blurRowFocus = () => {
+      const active = document.activeElement;
+      if (active && row.contains(active)) {
+        active.blur();
+      }
+    };
     copyButton.addEventListener("click", () => {
       postMessage({
         type: "copyTodo",
@@ -345,7 +351,10 @@
       copyButton.innerHTML = copiedIcon;
       copyButton.classList.add("copied");
     });
-    row.addEventListener("mouseleave", resetCopyState);
+    row.addEventListener("mouseleave", () => {
+      resetCopyState();
+      blurRowFocus();
+    });
     actions.appendChild(copyButton);
     const editButton = document.createElement("button");
     editButton.className = "todo-action";
