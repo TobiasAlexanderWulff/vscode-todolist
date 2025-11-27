@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as l10n from '@vscode/l10n';
 
 import { HandlerContext } from '../types/handlerContext';
 import { ScopeTarget } from '../types/scope';
@@ -211,6 +212,10 @@ async function handleWebviewCopy(
 	}
 	const writeText = context.clipboardWriteText ?? vscode.env.clipboard.writeText;
 	await writeText(todo.title);
+	vscode.window.setStatusBarMessage(
+		l10n.t('webview.todo.copy.success', 'Copied to clipboard'),
+		2000
+	);
 }
 
 /**

@@ -67,6 +67,7 @@
   "webview.projects.emptyMessages.afterCompletion.milestone": "Projekt-Meilenstein erreicht! Feiern und den nächsten setzen. 🚩",
   "webview.inlineCreate.hint": "Tippen und mit Enter speichern, mit Esc abbrechen.",
   "webview.todo.copy": "In die Zwischenablage kopieren",
+  "webview.todo.copy.success": "In die Zwischenablage kopiert",
   "webview.section.add": "Hinzufügen",
   "webview.section.clear": "Leeren",
   "command.todo.completeTodo.title": "Todo abschließen",

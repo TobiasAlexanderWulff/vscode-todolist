@@ -73,6 +73,7 @@
   "webview.projects.emptyMessages.afterCompletion.milestone": "Project milestone reached! Celebrate and set the next one. 🚩",
   "webview.inlineCreate.hint": "Type and press Enter to save, Esc to cancel.",
   "webview.todo.copy": "Copy to clipboard",
+  "webview.todo.copy.success": "Copied to clipboard",
   "webview.section.add": "Add",
   "webview.section.clear": "Clear",
   "command.todo.completeTodo.title": "Complete TODO",

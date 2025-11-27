@@ -515,7 +515,7 @@ function renderTodoRow(scope: WebviewScope, todo: WebviewTodoState, inlineState:
 		title.className = `todo-title${todo.completed ? ' completed' : ''}`;
 		title.textContent = todo.title;
 		title.addEventListener('dblclick', () => startInlineEdit(scope, todo.id));
-	row.appendChild(title);
+		row.appendChild(title);
 	}
 
 	const actions = document.createElement('div');

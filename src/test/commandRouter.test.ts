@@ -41,6 +41,7 @@ suite('Command handlers', () => {
 	const originalExecuteCommand = vscode.commands.executeCommand;
 	const originalShowWarningMessage = vscode.window.showWarningMessage;
 	const originalShowInformationMessage = vscode.window.showInformationMessage;
+	const originalSetStatusBarMessage = vscode.window.setStatusBarMessage;
 	const originalGetConfiguration = vscode.workspace.getConfiguration;
 	const activeAutoDeleteCoordinators: AutoDeleteCoordinator<HandlerContext>[] = [];
 	let restoreReadConfig: (() => void) | undefined;
@@ -113,6 +114,9 @@ suite('Command handlers', () => {
 			originalShowWarningMessage;
 		(vscode.window as unknown as { showInformationMessage: typeof vscode.window.showInformationMessage }).showInformationMessage =
 			originalShowInformationMessage;
+		(
+			vscode.window as unknown as { setStatusBarMessage: typeof vscode.window.setStatusBarMessage }
+		).setStatusBarMessage = originalSetStatusBarMessage;
 		(vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration =
 			originalGetConfiguration;
 		restoreReadConfig?.();
@@ -334,9 +338,19 @@ suite('Command handlers', () => {
 		const host = new FakeWebviewHost();
 		const autoDelete = createAutoDelete(host);
 		let copied: string | undefined;
+		let statusMessage: any[] | undefined;
 		const writeTextStub: HandlerContext['clipboardWriteText'] = async (value: string) => {
 			copied = value;
 		};
+		const setStatusBarMessageStub: typeof vscode.window.setStatusBarMessage = (...args: any[]) => {
+			statusMessage = args;
+			return {} as vscode.Disposable;
+		};
+		(
+			vscode.window as unknown as {
+				setStatusBarMessage: typeof vscode.window.setStatusBarMessage;
+			}
+		).setStatusBarMessage = setStatusBarMessageStub;
 
 		const message: InboundMessage = {
 			type: 'copyTodo',
@@ -345,10 +359,18 @@ suite('Command handlers', () => {
 		};
 		await handleWebviewMessage(
 			{ mode: 'global', message },
-			toHandlerContext(repository, host, autoDelete, { clipboardWriteText: writeTextStub })
+			toHandlerContext(repository, host, autoDelete, {
+				clipboardWriteText: writeTextStub,
+				webviewHost: host as unknown as TodoWebviewHost,
+			})
 		);
 
 		assert.strictEqual(copied, 'Copy me');
+		const statusText = statusMessage?.[0];
+		assert.ok(
+			statusText === 'Copied to clipboard' || statusText === 'webview.todo.copy.success'
+		);
+		assert.strictEqual(statusMessage?.[1], 2000);
 		assert.strictEqual(host.broadcastMessages.length, 0);
 	});
 
