@@ -13,4 +13,6 @@ export interface HandlerContext {
 	webviewHost: TodoWebviewHost;
 	/** Coordinator that manages auto-delete timers and cue callbacks. */
 	autoDelete: AutoDeleteCoordinator<HandlerContext>;
+	/** Optional clipboard writer used for tests or host integration. */
+	clipboardWriteText?: (value: string) => Thenable<void>;
 }

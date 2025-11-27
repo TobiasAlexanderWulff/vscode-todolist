@@ -15,6 +15,7 @@ Lightweight todos that live where you work: keep personal tasks alongside projec
 - Add & edit todos inline - no popups, no friction
 - Drag & drop ordering (persisted automatically)
 - Quick toggle, delete, and undo
+- Copy todo titles straight to your clipboard
 - Keyboard-first workflow (Cmd/Ctrl + Alt shortcuts)
 - English & German UI
 

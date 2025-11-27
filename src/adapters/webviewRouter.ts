@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as l10n from '@vscode/l10n';
 
 import { HandlerContext } from '../types/handlerContext';
 import { ScopeTarget } from '../types/scope';
@@ -89,6 +90,9 @@ async function handleWebviewMutation(
 			return {
 				mutated: await handleWebviewToggle(context, message.scope, message.todoId),
 			};
+		case 'copyTodo':
+			await handleWebviewCopy(context, message.scope, message.todoId);
+			return { mutated: false, broadcastHandled: true };
 		case 'removeTodo':
 			return handleWebviewRemoveWithUndo(context, message.scope, message.todoId);
 		case 'reorderTodos':
@@ -190,6 +194,31 @@ async function handleWebviewToggle(
 		context.autoDelete.cancel(target, todo.id);
 	}
 	return true;
+}
+
+async function handleWebviewCopy(
+	context: HandlerContext,
+	scope: WebviewScope,
+	todoId: string
+): Promise<void> {
+	const target = scopeFromWebviewScope(scope);
+	if (!target) {
+		return;
+	}
+	const todos = readTodos(context.repository, target);
+	const todo = todos.find((item) => item.id === todoId);
+	if (!todo) {
+		return;
+	}
+	const writeText = context.clipboardWriteText ?? vscode.env.clipboard.writeText;
+	await writeText(todo.title);
+	const toastDurationMs = 2000;
+	vscode.window.showInformationMessage(
+		l10n.t('webview.todo.copy.success', 'Copied to clipboard')
+	);
+	setTimeout(() => {
+		void vscode.commands.executeCommand('workbench.action.closeMessages');
+	}, toastDurationMs);
 }
 
 /**

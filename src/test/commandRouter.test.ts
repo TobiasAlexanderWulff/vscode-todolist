@@ -42,6 +42,7 @@ suite('Command handlers', () => {
 	const originalShowWarningMessage = vscode.window.showWarningMessage;
 	const originalShowInformationMessage = vscode.window.showInformationMessage;
 	const originalGetConfiguration = vscode.workspace.getConfiguration;
+	const originalSetTimeout = setTimeout;
 	const activeAutoDeleteCoordinators: AutoDeleteCoordinator<HandlerContext>[] = [];
 	let restoreReadConfig: (() => void) | undefined;
 
@@ -68,9 +69,15 @@ suite('Command handlers', () => {
 	function toHandlerContext(
 		repository: TodoRepository,
 		webviewHost: Pick<TodoWebviewHost, 'postMessage' | 'broadcast'>,
-		autoDelete: AutoDeleteCoordinator<HandlerContext>
+		autoDelete: AutoDeleteCoordinator<HandlerContext>,
+		overrides?: Partial<HandlerContext>
 	): HandlerContext {
-		return { repository, webviewHost: webviewHost as TodoWebviewHost, autoDelete };
+		return {
+			repository,
+			webviewHost: webviewHost as TodoWebviewHost,
+			autoDelete,
+			...overrides,
+		};
 	}
 
 	async function removeTodoWithoutUndo(
@@ -107,8 +114,11 @@ suite('Command handlers', () => {
 			originalShowWarningMessage;
 		(vscode.window as unknown as { showInformationMessage: typeof vscode.window.showInformationMessage }).showInformationMessage =
 			originalShowInformationMessage;
+		(vscode.commands as unknown as { executeCommand: typeof vscode.commands.executeCommand }).executeCommand =
+			originalExecuteCommand;
 		(vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration =
 			originalGetConfiguration;
+		(global as unknown as { setTimeout: typeof setTimeout }).setTimeout = originalSetTimeout;
 		restoreReadConfig?.();
 		restoreReadConfig = undefined;
 		activeAutoDeleteCoordinators.forEach((instance) => instance.dispose());
@@ -318,6 +328,61 @@ suite('Command handlers', () => {
 				(message) => (message as { type: string }).type === 'stateUpdate'
 			)
 		);
+	});
+
+	test('copies a todo title via webview message', async () => {
+		const { repository } = createRepositoryHarness();
+		const todo = repository.createTodo({ title: 'Copy me', scope: 'global' });
+		await repository.saveGlobalTodos([todo]);
+
+		const host = new FakeWebviewHost();
+		const autoDelete = createAutoDelete(host);
+		let copied: string | undefined;
+		let infoMessage: any[] | undefined;
+		const executedCommands: string[] = [];
+		const scheduledTimeouts: Array<() => void> = [];
+		const writeTextStub: HandlerContext['clipboardWriteText'] = async (value: string) => {
+			copied = value;
+		};
+		const showInformationMessageStub: typeof vscode.window.showInformationMessage = async (
+			...args: any[]
+		) => {
+			infoMessage = args;
+			return undefined as unknown as never;
+		};
+		const executeCommandStub: typeof vscode.commands.executeCommand = async (command: string) => {
+			executedCommands.push(command);
+			return undefined as unknown as never;
+		};
+		const setTimeoutStub = ((callback: (...args: any[]) => void) => {
+			scheduledTimeouts.push(callback);
+			return 0 as unknown as ReturnType<typeof setTimeout>;
+		}) as unknown as typeof setTimeout;
+		(vscode.window as unknown as { showInformationMessage: typeof vscode.window.showInformationMessage }).showInformationMessage =
+			showInformationMessageStub;
+		(vscode.commands as unknown as { executeCommand: typeof vscode.commands.executeCommand }).executeCommand =
+			executeCommandStub;
+		(global as unknown as { setTimeout: typeof setTimeout }).setTimeout = setTimeoutStub;
+
+		const message: InboundMessage = {
+			type: 'copyTodo',
+			scope: { scope: 'global' },
+			todoId: todo.id,
+		};
+		await handleWebviewMessage(
+			{ mode: 'global', message },
+			toHandlerContext(repository, host, autoDelete, {
+				clipboardWriteText: writeTextStub,
+				webviewHost: host as unknown as TodoWebviewHost,
+			})
+		);
+		scheduledTimeouts.forEach((fn) => fn());
+
+		assert.strictEqual(copied, 'Copy me');
+		const statusText = infoMessage?.[0];
+		assert.ok(statusText === 'Copied to clipboard' || statusText === 'webview.todo.copy.success');
+		assert.ok(executedCommands.includes('workbench.action.closeMessages'));
+		assert.strictEqual(host.broadcastMessages.length, 0);
 	});
 
 	test('clears and restores workspace todos via undo from webview', async () => {

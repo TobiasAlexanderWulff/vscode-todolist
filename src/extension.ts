@@ -56,6 +56,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 		},
 	});
 	const handlerContext: HandlerContext = { repository, webviewHost, autoDelete };
+	handlerContext.clipboardWriteText = (value: string) => vscode.env.clipboard.writeText(value);
 	const webviewMessageDisposable = webviewHost.onDidReceiveMessage((event) =>
 		routeWebviewMessage(event, handlerContext)
 	);
