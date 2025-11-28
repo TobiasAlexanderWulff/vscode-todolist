@@ -537,10 +537,10 @@ function renderTodoRow(scope: WebviewScope, todo: WebviewTodoState, inlineState:
 		copyButton.innerHTML = originalCopyIcon;
 		copyButton.classList.remove('copied');
 	};
-	const blurRowFocus = () => {
+	const blurCopyFocus = () => {
 		const active = document.activeElement as HTMLElement | null;
-		if (active && row.contains(active)) {
-			active.blur();
+		if (active === copyButton) {
+			copyButton.blur();
 		}
 	};
 	copyButton.addEventListener('click', () => {
@@ -554,7 +554,7 @@ function renderTodoRow(scope: WebviewScope, todo: WebviewTodoState, inlineState:
 	});
 	row.addEventListener('mouseleave', () => {
 		resetCopyState();
-		blurRowFocus();
+		blurCopyFocus();
 	});
 	actions.appendChild(copyButton);
 

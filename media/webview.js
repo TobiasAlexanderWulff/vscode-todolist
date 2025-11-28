@@ -336,10 +336,10 @@
       copyButton.innerHTML = originalCopyIcon;
       copyButton.classList.remove("copied");
     };
-    const blurRowFocus = () => {
+    const blurCopyFocus = () => {
       const active = document.activeElement;
-      if (active && row.contains(active)) {
-        active.blur();
+      if (active === copyButton) {
+        copyButton.blur();
       }
     };
     copyButton.addEventListener("click", () => {
@@ -353,7 +353,7 @@
     });
     row.addEventListener("mouseleave", () => {
       resetCopyState();
-      blurRowFocus();
+      blurCopyFocus();
     });
     actions.appendChild(copyButton);
     const editButton = document.createElement("button");
