@@ -339,8 +339,6 @@ suite('Command handlers', () => {
 		const autoDelete = createAutoDelete(host);
 		let copied: string | undefined;
 		let infoMessage: any[] | undefined;
-		const executedCommands: string[] = [];
-		const scheduledTimeouts: Array<() => void> = [];
 		const writeTextStub: HandlerContext['clipboardWriteText'] = async (value: string) => {
 			copied = value;
 		};
@@ -350,19 +348,8 @@ suite('Command handlers', () => {
 			infoMessage = args;
 			return undefined as unknown as never;
 		};
-		const executeCommandStub: typeof vscode.commands.executeCommand = async (command: string) => {
-			executedCommands.push(command);
-			return undefined as unknown as never;
-		};
-		const setTimeoutStub = ((callback: (...args: any[]) => void) => {
-			scheduledTimeouts.push(callback);
-			return 0 as unknown as ReturnType<typeof setTimeout>;
-		}) as unknown as typeof setTimeout;
 		(vscode.window as unknown as { showInformationMessage: typeof vscode.window.showInformationMessage }).showInformationMessage =
 			showInformationMessageStub;
-		(vscode.commands as unknown as { executeCommand: typeof vscode.commands.executeCommand }).executeCommand =
-			executeCommandStub;
-		(global as unknown as { setTimeout: typeof setTimeout }).setTimeout = setTimeoutStub;
 
 		const message: InboundMessage = {
 			type: 'copyTodo',
@@ -376,12 +363,10 @@ suite('Command handlers', () => {
 				webviewHost: host as unknown as TodoWebviewHost,
 			})
 		);
-		scheduledTimeouts.forEach((fn) => fn());
 
 		assert.strictEqual(copied, 'Copy me');
 		const statusText = infoMessage?.[0];
 		assert.ok(statusText === 'Copied to clipboard' || statusText === 'webview.todo.copy.success');
-		assert.ok(executedCommands.includes('workbench.action.closeMessages'));
 		assert.strictEqual(host.broadcastMessages.length, 0);
 	});
 

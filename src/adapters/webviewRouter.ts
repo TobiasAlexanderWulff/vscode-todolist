@@ -212,13 +212,9 @@ async function handleWebviewCopy(
 	}
 	const writeText = context.clipboardWriteText ?? vscode.env.clipboard.writeText;
 	await writeText(todo.title);
-	const toastDurationMs = 2000;
 	vscode.window.showInformationMessage(
 		l10n.t('webview.todo.copy.success', 'Copied to clipboard')
 	);
-	setTimeout(() => {
-		void vscode.commands.executeCommand('workbench.action.closeMessages');
-	}, toastDurationMs);
 }
 
 /**
