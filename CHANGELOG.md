@@ -6,6 +6,17 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Added
+- Copy action for todo items with clipboard write support and a toast/visual confirmation, including test injection for the clipboard writer.
+
+### Changed
+- Polished copy affordance visuals: refined icon styling and aligned accents, and smoothed confirmation animations.
+
+### Fixed
+- Handled missing `closeMessages` command in copy toast flow and removed unsupported toast-close handling to avoid errors.
+- Reset copied/hover state after copy.
+- Ensured inline edits stay active when copy state resets and during pointer moves, so editing isn’t interrupted by copy feedback.
+
 ## [0.3.0] - 2025-11-24
 
 ### Added
